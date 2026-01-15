@@ -1,34 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSA Analytics // Pro</title>
+    <title>DSA TRACKER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        :root { --bg-body: #f1f5f9; --bg-card: #ffffff; --text-main: #0f172a; --border: #e2e8f0; --accent: #2563eb; }
-        [data-theme='dark'] { --bg-body: #020617; --bg-card: #0f172a; --text-main: #f9fafb; --border: #1e293b; --accent: #3b82f6; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: all 0.3s ease; margin: 0; }
-        .nav-sticky { background-color: var(--bg-card); border-bottom: 1px solid var(--border); }
-        .modern-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; }
-        .input-pro { background-color: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); border-radius: 12px; padding: 12px; outline: none; width: 100%; }
-        .code-container { position: relative; background: #0d1117; border-radius: 8px; margin-top: 12px; border: 1px solid #30363d; }
-        .code-block { color: #c9d1d9; font-family: 'Consolas', 'Monaco', monospace; padding: 16px; font-size: 13px; overflow-x: auto; white-space: pre; }
-        .btn-copy { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.1); color: #8b949e; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-        .btn-action { background-color: var(--accent); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; }
-        .streak-val { color: #f97316; font-weight: 900; }
+        :root {
+            --bg: #fdfdfd;
+            --card: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --primary: #2563eb;
+        }
+
+        [data-theme='dark'] {
+            --bg: #030712;
+            --card: #0f172a;
+            --text: #f8fafc;
+            --border: #1e293b;
+            --primary: #3b82f6;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.4s ease;
+            letter-spacing: -0.01em;
+        }
+
+        /* Glassmorphism Navigation */
+        .glass-nav {
+            background: rgba(var(--bg), 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Premium Dashboard Cards */
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Hierarchical List Styles */
+        .topic-header {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .topic-header:hover {
+            border-color: var(--primary);
+        }
+
+        .question-item {
+            border-left: 2px solid var(--border);
+            margin-left: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .question-item::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--border);
+            border-radius: 50%;
+        }
+
+        /* Buttons */
+        .btn-premium {
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-premium:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        .btn-excel {
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Code Block */
+        .code-window {
+            background: #0d1117;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .markdown-body ul {
+            list-style: disc;
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .markdown-body strong {
+            color: var(--primary);
+        }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
         const USER = "Subasish09";
         const REPO = "dsa-tracker";
@@ -38,7 +156,8 @@
         function App() {
             const [data, setData] = useState({ logs: [], history: [] });
             const [isEditing, setIsEditing] = useState(false);
-            const [expandedCode, setExpandedCode] = useState(null);
+            const [expandedTopic, setExpandedTopic] = useState(null);
+            const [expandedQuestion, setExpandedQuestion] = useState(null);
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
             const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "" });
@@ -51,24 +170,31 @@
             useEffect(() => {
                 fetch(RAW_URL + "?v=" + Date.now())
                     .then(res => res.json())
-                    .then(resData => {
-                        setData(resData.logs ? resData : { logs: resData, history: [] });
-                    })
+                    .then(resData => setData(resData.logs ? resData : { logs: resData, history: [] }))
                     .catch(() => setData({ logs: [], history: [] }));
             }, []);
 
-            const calculateStreak = () => {
+            const streakCount = useMemo(() => {
                 const dates = data.history || [];
                 let count = 0, d = new Date();
-                while(dates.includes(d.toLocaleDateString())) { count++; d.setDate(d.getDate()-1); }
+                while (dates.includes(d.toLocaleDateString())) { count++; d.setDate(d.getDate() - 1); }
                 return count;
-            };
+            }, [data.history]);
+
+            const groupedLogs = useMemo(() => {
+                return data.logs.reduce((acc, log) => {
+                    const t = log.topic || "General";
+                    if (!acc[t]) acc[t] = [];
+                    acc[t].push(log);
+                    return acc;
+                }, {});
+            }, [data.logs]);
 
             const downloadExcel = () => {
                 const ws = XLSX.utils.json_to_sheet(data.logs);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "DSA_Logs");
-                XLSX.writeFile(wb, "DSA_Progress_Report.xlsx");
+                XLSX.utils.book_append_sheet(wb, ws, "DSA_DATA");
+                XLSX.writeFile(wb, "DSA_Journey_Report.xlsx");
             };
 
             const handleSave = async () => {
@@ -76,119 +202,159 @@
                     const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
                     const file = await res.json();
                     const today = new Date().toLocaleDateString();
-                    const newLog = { ...entry, id: Date.now(), date: today };
-                    const finalData = { 
-                        logs: [newLog, ...data.logs], 
-                        history: [...new Set([...data.history, today])] 
+                    const finalData = {
+                        logs: [{ ...entry, id: Date.now(), date: today }, ...data.logs],
+                        history: [...new Set([...data.history, today])]
                     };
                     const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
                     await fetch(API_URL, {
                         method: "PUT",
                         headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: `Add: ${entry.title}`, content, sha: file.sha })
+                        body: JSON.stringify({ message: `Add entry: ${entry.title}`, content, sha: file.sha })
                     });
                     setData(finalData); setIsEditing(false);
-                } catch (err) { alert("Save failed. Check Token."); }
+                } catch (e) { alert("Error saving. Check token/permissions."); }
             };
 
             const handleDelete = async (id) => {
-                if (!window.confirm("Delete entry? History/Streak will be kept.")) return;
+                if (!window.confirm("Delete this entry? (History/Streak will be preserved)")) return;
                 try {
                     const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
                     const file = await res.json();
-                    const finalData = { ...data, logs: data.logs.filter(log => log.id !== id) };
+                    const updatedLogs = data.logs.filter(log => log.id !== id);
+                    const finalData = { ...data, logs: updatedLogs };
                     const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
                     await fetch(API_URL, {
                         method: "PUT",
                         headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: "Delete log", content, sha: file.sha })
+                        body: JSON.stringify({ message: "Delete log entry", content, sha: file.sha })
                     });
                     setData(finalData);
-                } catch (err) { alert("Delete failed."); }
+                } catch (e) { alert("Error deleting. Check token permissions."); }
             };
 
             return (
                 <div className="min-h-screen">
-                    <nav className="nav-sticky sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white text-xs">DSA</div>
-                            <span className="font-bold text-lg tracking-tight">DSA TRACKER</span>
-                        </div>
+                    <nav className="glass-nav sticky top-0 z-50 px-8 py-4 flex justify-between items-center bg-transparent">
                         <div className="flex items-center gap-4">
-                            <button onClick={downloadExcel} title="Download Excel" className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                                📊 <span className="hidden md:inline ml-1 text-xs font-bold uppercase tracking-widest">Excel Export</span>
+                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">C</div>
+                            <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                            <button onClick={downloadExcel} className="btn-excel hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                Export .xlsx
                             </button>
-                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-xl p-2">{theme === 'light' ? '🌙' : '☀️'}</button>
-                            <button onClick={() => setIsEditing(!isEditing)} className="btn-action text-sm">
-                                {isEditing ? "Back to Dashboard" : "+ Add Entry"}
+                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 text-xl">
+                                {theme === 'light' ? '🌙' : '☀️'}
+                            </button>
+                            <button onClick={() => setIsEditing(!isEditing)} className="btn-premium">
+                                {isEditing ? "Close" : "+ New Log"}
                             </button>
                         </div>
                     </nav>
 
-                    <main className="max-w-5xl mx-auto p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                            <div className="modern-card p-6 flex justify-between items-center shadow-sm">
-                                <div><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest mb-1">🔥 Current Streak</p><h2 className="text-4xl font-black streak-val">{calculateStreak()} Days</h2></div>
-                                <div className="text-right"><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">Total Solved</p><h2 className="text-4xl font-black">{data.logs.length}</h2></div>
+                    <main className="max-w-6xl mx-auto p-8">
+                        {/* High-End Dashboard Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                            <div className="stat-card border-l-4 border-l-orange-500">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Persistence</span>
+                                <h2 className="text-4xl font-extrabold mt-1">{streakCount} Day Streak</h2>
                             </div>
-                            <div className="modern-card p-6 flex items-center justify-center gap-4">
-                                <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">History Heatmap</p>
-                                <div className="flex gap-1 flex-wrap max-w-[150px]">
-                                    {data.history.slice(-14).map(d => <div key={d} className="w-3 h-3 bg-blue-500 rounded-sm" title={d}></div>)}
-                                    {data.history.length === 0 && <span className="text-[10px] opacity-30">No activity yet</span>}
+                            <div className="stat-card border-l-4 border-l-blue-600">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Progress</span>
+                                <h2 className="text-4xl font-extrabold mt-1">{data.logs.length} Questions</h2>
+                            </div>
+                            <div className="stat-card border-l-4 border-l-indigo-600">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Topics</span>
+                                <div className="mt-2 space-y-1">
+                                    {Object.entries(groupedLogs).slice(0, 3).map(([t, l]) => (
+                                        <div key={t} className="flex justify-between items-center text-xs font-bold">
+                                            <span className="opacity-60">{t}</span>
+                                            <span className="text-blue-500">{l.length}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
 
                         {isEditing ? (
-                            <div className="modern-card p-8 max-w-2xl mx-auto space-y-4 shadow-xl">
-                                <h2 className="text-2xl font-bold mb-4">New Entry</h2>
-                                <input type="password" placeholder="GitHub Access Token" className="input-pro" value={token} onChange={e => {setToken(e.target.value); localStorage.setItem('gh_token', e.target.value)}} />
+                            <div className="stat-card max-w-2xl mx-auto space-y-6">
+                                <h2 className="text-2xl font-black">Sync Entry</h2>
+                                <input type="password" placeholder="GitHub Access Token" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" placeholder="Topic (Recursion, Trees...)" className="input-pro" onChange={e => setEntry({...entry, topic: e.target.value})} />
-                                    <select className="input-pro" onChange={e => setEntry({...entry, difficulty: e.target.value})}>
+                                    <input type="text" placeholder="Topic (e.g. Graph)" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none" onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                    <select className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none font-bold" onChange={e => setEntry({ ...entry, difficulty: e.target.value })}>
                                         <option>Easy</option><option>Medium</option><option>Hard</option>
                                     </select>
                                 </div>
-                                <input type="text" placeholder="Problem Title" className="input-pro font-bold" onChange={e => setEntry({...entry, title: e.target.value})} />
-                                <textarea placeholder="Logic & Complexity Steps..." className="input-pro h-32" onChange={e => setEntry({...entry, logic: e.target.value})}></textarea>
-                                <textarea placeholder="Paste Solution Code Here..." className="input-pro h-48 font-mono text-sm" onChange={e => setEntry({...entry, code: e.target.value})}></textarea>
-                                <button onClick={handleSave} className="w-full btn-action py-4">Commit to GitHub</button>
+                                <input type="text" placeholder="Problem Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none font-bold" onChange={e => setEntry({ ...entry, title: e.target.value })} />
+                                <textarea placeholder="Logic & Complexity (Markdown supported)" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none h-32" onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
+                                <textarea placeholder="Solution Code" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none h-48 font-mono text-sm" onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
+                                <button onClick={handleSave} className="w-full btn-premium py-5">Push to Repository</button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-6">
-                                {data.logs.length === 0 ? (
-                                    <div className="text-center py-20 opacity-30">No questions logged yet. Start your journey!</div>
-                                ) : (
-                                    data.logs.map((log) => (
-                                        <div key={log.id} className="modern-card p-6 shadow-sm border-l-4 border-l-blue-500 relative">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{log.topic || "General"}</span>
-                                                    <h3 className="text-xl font-bold mt-1 tracking-tight">{log.title}</h3>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="text-right text-[10px] opacity-40 font-bold">{log.date}</div>
-                                                    {token && <button onClick={() => handleDelete(log.id)} className="text-red-500 opacity-20 hover:opacity-100 transition-opacity">✕</button>}
-                                                </div>
+                            <div className="space-y-6">
+                                {Object.entries(groupedLogs).map(([topic, logs]) => (
+                                    <div key={topic} className="space-y-3">
+                                        <div
+                                            onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)}
+                                            className="topic-header p-5 flex justify-between items-center group"
+                                        >
+                                            <span className="text-lg font-black">{topic}</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-black px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full tracking-wider uppercase">{logs.length} Questions</span>
+                                                <span className="opacity-30 group-hover:opacity-100 transition-opacity">{expandedTopic === topic ? '−' : '+'}</span>
                                             </div>
-                                            <p className="text-sm opacity-80 mb-6 whitespace-pre-wrap leading-relaxed">{log.logic}</p>
-                                            {log.code && (
-                                                <div>
-                                                    <button onClick={() => setExpandedCode(expandedCode === log.id ? null : log.id)} className="text-[11px] font-bold text-blue-500 hover:underline">
-                                                        {expandedCode === log.id ? "Hide Code" : "Expand Code"}
-                                                    </button>
-                                                    {expandedCode === log.id && (
-                                                        <div className="code-container">
-                                                            <button onClick={() => {navigator.clipboard.writeText(log.code); alert("Copied!")}} className="btn-copy text-[8px] uppercase">Copy</button>
-                                                            <div className="code-block">{log.code}</div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
                                         </div>
-                                    ))
-                                )}
+
+                                        {expandedTopic === topic && (
+                                            <div className="space-y-4 pt-2">
+                                                {logs.map(log => (
+                                                    <div key={log.id} className="question-item">
+                                                        <div
+                                                            onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)}
+                                                            className="cursor-pointer group"
+                                                        >
+                                                            <div className="flex justify-between items-center">
+                                                                <h4 className="text-md font-bold group-hover:text-blue-500 transition-colors">{log.title}</h4>
+                                                                <div className="flex items-center gap-4">
+                                                                    <span className="text-[10px] font-bold opacity-30">{log.date}</span>
+                                                                    {token && (
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleDelete(log.id); }}
+                                                                            className="text-red-500 opacity-20 hover:opacity-100 transition-opacity text-xs font-bold"
+                                                                            title="Delete Entry"
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {expandedQuestion === log.id && (
+                                                            <div className="mt-4 p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                                                                <div
+                                                                    className="markdown-body text-sm leading-relaxed opacity-80"
+                                                                    dangerouslySetInnerHTML={{ __html: marked.parse(log.logic || "") }}
+                                                                ></div>
+                                                                {log.code && (
+                                                                    <div className="code-window">
+                                                                        <div className="bg-slate-800/50 px-4 py-2 flex justify-between items-center border-b border-slate-700">
+                                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source Code</span>
+                                                                            <button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[10px] font-bold text-blue-400">Copy</button>
+                                                                        </div>
+                                                                        <pre className="p-4 overflow-x-auto text-[13px] leading-relaxed text-slate-300 font-mono"><code>{log.code}</code></pre>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </main>
@@ -198,4 +364,5 @@
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
+
 </html>

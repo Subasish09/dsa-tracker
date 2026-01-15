@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSA Analytics // Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-body: #f1f5f9; --bg-card: #ffffff; --text-main: #0f172a; --border: #e2e8f0; --accent: #2563eb; }
+        [data-theme='dark'] { --bg-body: #020617; --bg-card: #0f172a; --text-main: #f9fafb; --border: #1e293b; --accent: #3b82f6; }
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-body); color: var(--text-main); transition: all 0.3s ease; margin: 0; }
+        .nav-sticky { background-color: var(--bg-card); border-bottom: 1px solid var(--border); }
+        .modern-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; transition: transform 0.2s ease, border-color 0.2s ease; }
+        .modern-card:hover { border-color: var(--accent); }
+        .input-pro { background-color: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); border-radius: 12px; padding: 12px; outline: none; width: 100%; }
+        .btn-action { background-color: var(--accent); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; }
+        .streak-val { background: linear-gradient(to bottom right, #f97316, #ea580c); -webkit-background-clip: text; -webkit-fill-color: transparent; color: #f97316; }
+        .btn-delete { color: #ef4444; opacity: 0.4; transition: opacity 0.2s; }
+        .btn-delete:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const USER = "Subasish09";
+        const REPO = "dsa-tracker";
+        const RAW_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json`;
+        const API_URL = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
+
+        function App() {
+            const [logs, setLogs] = useState([]);
+            const [isEditing, setIsEditing] = useState(false);
+            const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+            const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
+            const [entry, setEntry] = useState({ title: "", logic: "", difficulty: "Medium", topic: "" });
+
+            useEffect(() => {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            }, [theme]);
+
+            useEffect(() => {
+                fetch(RAW_URL + "?v=" + Date.now())
+                    .then(res => res.json())
+                    .then(data => setLogs(Array.isArray(data) ? data : []))
+                    .catch(() => setLogs([]));
+            }, []);
+
+            const streak = () => {
+                const dates = [...new Set(logs.map(l => l.date))];
+                let count = 0, d = new Date();
+                while(dates.includes(d.toLocaleDateString())) { count++; d.setDate(d.getDate()-1); }
+                return count;
+            };
+
+            const topics = () => {
+                const map = {};
+                logs.forEach(l => { if(l.topic) map[l.topic] = (map[l.topic] || 0) + 1 });
+                return Object.entries(map).sort((a,b) => b[1] - a[1]).slice(0, 3);
+            };
+
+            const downloadExcel = () => {
+                const ws = XLSX.utils.json_to_sheet(logs);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "DSA");
+                XLSX.writeFile(wb, "DSA_Report.xlsx");
+            };
+
+            const handleSave = async () => {
+                try {
+                    const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
+                    const file = await res.json();
+                    const newLog = { ...entry, id: Date.now(), date: new Date().toLocaleDateString() };
+                    const updated = [newLog, ...logs];
+                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));
+                    await fetch(API_URL, {
+                        method: "PUT",
+                        headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: `Add: ${entry.title}`, content, sha: file.sha })
+                    });
+                    setLogs(updated); setIsEditing(false);
+                } catch (err) { alert("Error saving. Verify token permissions."); }
+            };
+
+            const handleDelete = async (id) => {
+                if (!window.confirm("Delete this entry?")) return;
+                try {
+                    const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
+                    const file = await res.json();
+                    const updated = logs.filter(log => log.id !== id);
+                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));
+                    await fetch(API_URL, {
+                        method: "PUT",
+                        headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: "Delete log entry", content, sha: file.sha })
+                    });
+                    setLogs(updated);
+                } catch (err) { alert("Error deleting. Verify token."); }
+            };
+
+            return (
+                <div className="min-h-screen">
+                    <nav className="nav-sticky sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white">D</div>
+                            <span className="font-bold text-lg tracking-tight">DSA.CORE</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button onClick={downloadExcel} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
+                                📊 <span className="hidden md:inline ml-1 text-xs font-bold uppercase tracking-widest">Excel</span>
+                            </button>
+                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-xl p-2">
+                                {theme === 'light' ? '🌙' : '☀️'}
+                            </button>
+                            <button onClick={() => setIsEditing(!isEditing)} className="btn-action text-sm">
+                                {isEditing ? "View Feed" : "+ Add Entry"}
+                            </button>
+                        </div>
+                    </nav>
+
+                    <main className="max-w-5xl mx-auto p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                            <div className="modern-card p-6">
+                                <p className="text-[10px] font-bold opacity-50 uppercase mb-1">Streak</p>
+                                <h2 className="text-4xl font-black streak-val">{streak()} Days</h2>
+                            </div>
+                            <div className="modern-card p-6">
+                                <p className="text-[10px] font-bold opacity-50 uppercase mb-1">Total Solved</p>
+                                <h2 className="text-4xl font-black">{logs.length}</h2>
+                            </div>
+                            <div className="modern-card p-6">
+                                <p className="text-[10px] font-bold opacity-50 uppercase mb-3">Top Topics</p>
+                                {topics().map(([n, c]) => (
+                                    <div key={n} className="flex justify-between text-xs font-bold mb-2">
+                                        <span className="opacity-70">{n}</span>
+                                        <span className="text-blue-500">{c} Qs</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {isEditing ? (
+                            <div className="modern-card p-8 max-w-2xl mx-auto space-y-6">
+                                <input type="password" placeholder="GitHub Access Token" className="input-pro" value={token} onChange={e => {setToken(e.target.value); localStorage.setItem('gh_token', e.target.value)}} />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="text" placeholder="Topic" className="input-pro" onChange={e => setEntry({...entry, topic: e.target.value})} />
+                                    <select className="input-pro" onChange={e => setEntry({...entry, difficulty: e.target.value})}>
+                                        <option>Easy</option><option>Medium</option><option>Hard</option>
+                                    </select>
+                                </div>
+                                <input type="text" placeholder="Problem Title" className="input-pro font-bold" onChange={e => setEntry({...entry, title: e.target.value})} />
+                                <textarea placeholder="Describe logic..." className="input-pro h-40" onChange={e => setEntry({...entry, logic: e.target.value})}></textarea>
+                                <button onClick={handleSave} className="w-full btn-action py-4">Save to Cloud</button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                {logs.map((log, i) => (
+                                    <div key={log.id || i} className="modern-card p-6 relative group">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{log.topic || "General"}</span>
+                                                <h3 className="text-xl font-bold mt-1">{log.title}</h3>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <span className="text-[10px] opacity-30 font-bold block">{log.date}</span>
+                                                    <span className="text-[9px] font-black border border-gray-200 dark:border-slate-700 px-1 rounded uppercase">{log.difficulty}</span>
+                                                </div>
+                                                {token && (
+                                                    <button onClick={() => handleDelete(log.id)} className="btn-delete p-2">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-sm opacity-70 leading-relaxed whitespace-pre-wrap">{log.logic}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

@@ -11,6 +11,12 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <style>
@@ -35,44 +41,28 @@
             background-color: var(--bg);
             color: var(--text);
             transition: background-color 0.4s ease;
-            letter-spacing: -0.01em;
         }
 
-        /* Glassmorphism Navigation */
         .glass-nav {
             background: rgba(var(--bg), 0.8);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
         }
 
-        /* Premium Dashboard Cards */
         .stat-card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Hierarchical List Styles */
         .topic-header {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 16px;
             margin-bottom: 12px;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .topic-header:hover {
-            border-color: var(--primary);
+            transition: 0.2s;
         }
 
         .question-item {
@@ -80,64 +70,122 @@
             margin-left: 1rem;
             padding-left: 1.5rem;
             position: relative;
+            margin-bottom: 1rem;
         }
 
         .question-item::before {
             content: '';
             position: absolute;
             left: -5px;
-            top: 50%;
+            top: 12px;
             width: 8px;
             height: 8px;
             background: var(--border);
             border-radius: 50%;
         }
 
-        /* Buttons */
         .btn-premium {
             background: var(--primary);
             color: white;
             padding: 12px 24px;
             border-radius: 12px;
             font-weight: 700;
-            font-size: 0.875rem;
             transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
 
-        .btn-premium:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
+        /* Markdown Style - FORCE FONT SIZES */
+        .markdown-body h1 {
+            font-size: 2.25rem !important;
+            font-weight: 800 !important;
+            margin-bottom: 1rem !important;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
         }
 
-        .btn-excel {
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .markdown-body h2 {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            margin-top: 1.5rem !important;
+            margin-bottom: 0.75rem !important;
         }
 
-        /* Code Block */
-        .code-window {
-            background: #0d1117;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-            margin-top: 1rem;
-            overflow: hidden;
+        .markdown-body h3 {
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            margin-top: 1.25rem !important;
         }
 
         .markdown-body ul {
-            list-style: disc;
-            padding-left: 1.5rem;
-            margin: 1rem 0;
+            list-style: disc !important;
+            padding-left: 1.5rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .markdown-body li {
+            margin-bottom: 0.25rem;
+        }
+
+        .markdown-body p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
         }
 
         .markdown-body strong {
             color: var(--primary);
+            font-weight: 700;
+        }
+
+        .workspace-container {
+            display: flex;
+            min-height: 500px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--card);
+        }
+
+        .editor-pane {
+            flex: 1;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-pane {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: var(--bg);
+            height: 500px;
+        }
+
+        .editor-area {
+            flex: 1;
+            width: 100%;
+            padding: 20px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            color: var(--text);
+        }
+
+        .toolbar-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 800;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            transition: 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--primary);
+            color: white;
         }
     </style>
 </head>
@@ -146,7 +194,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         const USER = "Subasish09";
         const REPO = "dsa-tracker";
@@ -161,6 +209,7 @@
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
             const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "" });
+            const editorRef = useRef(null);
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
@@ -173,6 +222,29 @@
                     .then(resData => setData(resData.logs ? resData : { logs: resData, history: [] }))
                     .catch(() => setData({ logs: [], history: [] }));
             }, []);
+
+            useEffect(() => {
+                if (!isEditing && Prism) Prism.highlightAll();
+            }, [isEditing, expandedQuestion]);
+
+            const insertTag = (tag) => {
+                const textarea = editorRef.current;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+                const before = text.substring(0, start);
+                const selected = text.substring(start, end);
+                const after = text.substring(end);
+
+                let newText = "";
+                if (tag === 'bold') newText = `${before}**${selected}**${after}`;
+                if (tag === 'h1') newText = `${before}\n# ${selected}${after}`;
+                if (tag === 'h2') newText = `${before}\n## ${selected}${after}`;
+                if (tag === 'list') newText = `${before}\n- ${selected}${after}`;
+
+                setEntry({ ...entry, logic: newText });
+                textarea.focus();
+            };
 
             const streakCount = useMemo(() => {
                 const dates = data.history || [];
@@ -193,166 +265,156 @@
             const downloadExcel = () => {
                 const ws = XLSX.utils.json_to_sheet(data.logs);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "DSA_DATA");
-                XLSX.writeFile(wb, "DSA_Journey_Report.xlsx");
+                XLSX.utils.book_append_sheet(wb, ws, "DSA");
+                XLSX.writeFile(wb, "DSA_Report.xlsx");
             };
 
             const handleSave = async () => {
-                try {
-                    const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
-                    const file = await res.json();
-                    const today = new Date().toLocaleDateString();
-                    const finalData = {
-                        logs: [{ ...entry, id: Date.now(), date: today }, ...data.logs],
-                        history: [...new Set([...data.history, today])]
-                    };
-                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
-                    await fetch(API_URL, {
-                        method: "PUT",
-                        headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: `Add entry: ${entry.title}`, content, sha: file.sha })
-                    });
-                    setData(finalData); setIsEditing(false);
-                } catch (e) { alert("Error saving. Check token/permissions."); }
+                const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
+                const file = await res.json();
+                const today = new Date().toLocaleDateString();
+                const finalData = {
+                    logs: [{ ...entry, id: Date.now(), date: today }, ...data.logs],
+                    history: [...new Set([...data.history, today])]
+                };
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
+                await fetch(API_URL, {
+                    method: "PUT",
+                    headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: `Add ${entry.title}`, content, sha: file.sha })
+                });
+                setData(finalData); setIsEditing(false);
             };
 
             const handleDelete = async (id) => {
-                if (!window.confirm("Delete this entry? (History/Streak will be preserved)")) return;
-                try {
-                    const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
-                    const file = await res.json();
-                    const updatedLogs = data.logs.filter(log => log.id !== id);
-                    const finalData = { ...data, logs: updatedLogs };
-                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
-                    await fetch(API_URL, {
-                        method: "PUT",
-                        headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: "Delete log entry", content, sha: file.sha })
-                    });
-                    setData(finalData);
-                } catch (e) { alert("Error deleting. Check token permissions."); }
+                if (!window.confirm("Delete this entry?")) return;
+                const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
+                const file = await res.json();
+                const finalData = { ...data, logs: data.logs.filter(log => log.id !== id) };
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
+                await fetch(API_URL, {
+                    method: "PUT",
+                    headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: "Delete log", content, sha: file.sha })
+                });
+                setData(finalData);
             };
 
             return (
-                <div className="min-h-screen">
-                    <nav className="glass-nav sticky top-0 z-50 px-8 py-4 flex justify-between items-center bg-transparent">
+                <div className="min-h-screen pb-10">
+                    <nav className="glass-nav sticky top-0 z-50 px-8 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">C</div>
+                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
                             <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
                         </div>
                         <div className="flex gap-4 items-center">
-                            <button onClick={downloadExcel} className="btn-excel hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                Export .xlsx
-                            </button>
-                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 text-xl">
-                                {theme === 'light' ? '🌙' : '☀️'}
-                            </button>
+                            <button onClick={downloadExcel} className="text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg">Excel Export</button>
+                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-xl">{theme === 'light' ? '🌙' : '☀️'}</button>
                             <button onClick={() => setIsEditing(!isEditing)} className="btn-premium">
                                 {isEditing ? "Close" : "+ New Log"}
                             </button>
                         </div>
                     </nav>
 
-                    <main className="max-w-6xl mx-auto p-8">
-                        {/* High-End Dashboard Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                            <div className="stat-card border-l-4 border-l-orange-500">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Persistence</span>
-                                <h2 className="text-4xl font-extrabold mt-1">{streakCount} Day Streak</h2>
-                            </div>
-                            <div className="stat-card border-l-4 border-l-blue-600">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Progress</span>
-                                <h2 className="text-4xl font-extrabold mt-1">{data.logs.length} Questions</h2>
-                            </div>
-                            <div className="stat-card border-l-4 border-l-indigo-600">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Topics</span>
-                                <div className="mt-2 space-y-1">
-                                    {Object.entries(groupedLogs).slice(0, 3).map(([t, l]) => (
-                                        <div key={t} className="flex justify-between items-center text-xs font-bold">
-                                            <span className="opacity-60">{t}</span>
-                                            <span className="text-blue-500">{l.length}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
+                    <main className="max-w-[1600px] mx-auto p-4 md:p-8">
                         {isEditing ? (
-                            <div className="stat-card max-w-2xl mx-auto space-y-6">
-                                <h2 className="text-2xl font-black">Sync Entry</h2>
-                                <input type="password" placeholder="GitHub Access Token" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" placeholder="Topic (e.g. Graph)" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none" onChange={e => setEntry({ ...entry, topic: e.target.value })} />
-                                    <select className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none font-bold" onChange={e => setEntry({ ...entry, difficulty: e.target.value })}>
-                                        <option>Easy</option><option>Medium</option><option>Hard</option>
-                                    </select>
+                            <div className="space-y-6">
+                                <div className="stat-card space-y-4">
+                                    <h2 className="text-2xl font-black mb-2 tracking-tight text-blue-500">Sync New Problem</h2>
+                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input type="text" placeholder="Topic" className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                        <select className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                    </div>
+
+                                    <input type="text" placeholder="Question Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, title: e.target.value })} />
+
+                                    <div className="workspace-container shadow-sm">
+                                        <div className="editor-pane">
+                                            <div className="bg-slate-100 dark:bg-slate-800 p-2 flex gap-2 border-b border-slate-200 dark:border-slate-700">
+                                                <button onClick={() => insertTag('h1')} className="toolbar-btn">H1</button>
+                                                <button onClick={() => insertTag('h2')} className="toolbar-btn">H2</button>
+                                                <button onClick={() => insertTag('bold')} className="toolbar-btn">B</button>
+                                                <button onClick={() => insertTag('list')} className="toolbar-btn">UL</button>
+                                            </div>
+                                            <textarea
+                                                ref={editorRef}
+                                                className="editor-area"
+                                                placeholder="Write logic here..."
+                                                value={entry.logic}
+                                                onChange={e => setEntry({ ...entry, logic: e.target.value })}
+                                            ></textarea>
+                                        </div>
+                                        <div className="preview-pane markdown-body">
+                                            <div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Preview area...*") }}></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Code Implementation</p>
+                                        <textarea className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl h-48 font-mono text-xs outline-none focus:border-blue-500" placeholder="Paste Source Code here..." onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
+                                    </div>
+
+                                    <button onClick={handleSave} className="w-full btn-premium py-5 text-lg shadow-2xl">Push to GitHub Repository</button>
                                 </div>
-                                <input type="text" placeholder="Problem Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none font-bold" onChange={e => setEntry({ ...entry, title: e.target.value })} />
-                                <textarea placeholder="Logic & Complexity (Markdown supported)" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none h-32" onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
-                                <textarea placeholder="Solution Code" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none h-48 font-mono text-sm" onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
-                                <button onClick={handleSave} className="w-full btn-premium py-5">Push to Repository</button>
                             </div>
                         ) : (
-                            <div className="space-y-6">
-                                {Object.entries(groupedLogs).map(([topic, logs]) => (
-                                    <div key={topic} className="space-y-3">
-                                        <div
-                                            onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)}
-                                            className="topic-header p-5 flex justify-between items-center group"
-                                        >
-                                            <span className="text-lg font-black">{topic}</span>
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-[10px] font-black px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full tracking-wider uppercase">{logs.length} Questions</span>
-                                                <span className="opacity-30 group-hover:opacity-100 transition-opacity">{expandedTopic === topic ? '−' : '+'}</span>
-                                            </div>
+                            <div className="max-w-5xl mx-auto space-y-6">
+                                {/* Dashboard view continues exactly as requested... */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                                    <div className="stat-card border-l-4 border-l-orange-500">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Persistence</span>
+                                        <h2 className="text-4xl font-extrabold mt-1">{streakCount}d Streak</h2>
+                                    </div>
+                                    <div className="stat-card border-l-4 border-l-blue-600">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Progress</span>
+                                        <h2 className="text-4xl font-extrabold mt-1">{data.logs.length} Solved</h2>
+                                    </div>
+                                    <div className="stat-card border-l-4 border-l-indigo-600">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Topics</span>
+                                        <div className="mt-2 space-y-1">
+                                            {Object.entries(groupedLogs).slice(0, 3).map(([t, l]) => (
+                                                <div key={t} className="flex justify-between items-center text-xs font-bold">
+                                                    <span className="opacity-60">{t}</span>
+                                                    <span className="text-blue-500">{l.length}</span>
+                                                </div>
+                                            ))}
                                         </div>
+                                    </div>
+                                </div>
 
-                                        {expandedTopic === topic && (
-                                            <div className="space-y-4 pt-2">
-                                                {logs.map(log => (
-                                                    <div key={log.id} className="question-item">
-                                                        <div
-                                                            onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)}
-                                                            className="cursor-pointer group"
-                                                        >
-                                                            <div className="flex justify-between items-center">
-                                                                <h4 className="text-md font-bold group-hover:text-blue-500 transition-colors">{log.title}</h4>
-                                                                <div className="flex items-center gap-4">
-                                                                    <span className="text-[10px] font-bold opacity-30">{log.date}</span>
-                                                                    {token && (
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); handleDelete(log.id); }}
-                                                                            className="text-red-500 opacity-20 hover:opacity-100 transition-opacity text-xs font-bold"
-                                                                            title="Delete Entry"
-                                                                        >
-                                                                            ✕
-                                                                        </button>
-                                                                    )}
+                                {Object.entries(groupedLogs).map(([topic, logs]) => (
+                                    <div key={topic}>
+                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-5 flex justify-between items-center">
+                                            <span className="text-lg font-black">{topic}</span>
+                                            <span className="text-[10px] font-black px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span>
+                                        </div>
+                                        {expandedTopic === topic && logs.map(log => (
+                                            <div key={log.id} className="question-item">
+                                                <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group">
+                                                    <h4 className="font-bold group-hover:text-blue-500 transition-colors">{log.title}</h4>
+                                                    <div className="flex gap-4 items-center">
+                                                        <span className="text-[10px] font-bold opacity-30">{log.date}</span>
+                                                        {token && <button onClick={(e) => { e.stopPropagation(); handleDelete(log.id) }} className="text-red-500 opacity-20 hover:opacity-100">✕</button>}
+                                                    </div>
+                                                </div>
+                                                {expandedQuestion === log.id && (
+                                                    <div className="mt-4 p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">
+                                                        <div className="markdown-body text-sm leading-relaxed opacity-80 mb-4" dangerouslySetInnerHTML={{ __html: marked.parse(log.logic || "") }}></div>
+                                                        {log.code && (
+                                                            <div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden">
+                                                                <div className="bg-[#161b22] px-4 py-2 border-b border-[#30363d] flex justify-between items-center">
+                                                                    <span className="text-[10px] font-bold opacity-40 uppercase">Code</span>
+                                                                    <button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[10px] font-bold text-blue-400">Copy</button>
                                                                 </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {expandedQuestion === log.id && (
-                                                            <div className="mt-4 p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-                                                                <div
-                                                                    className="markdown-body text-sm leading-relaxed opacity-80"
-                                                                    dangerouslySetInnerHTML={{ __html: marked.parse(log.logic || "") }}
-                                                                ></div>
-                                                                {log.code && (
-                                                                    <div className="code-window">
-                                                                        <div className="bg-slate-800/50 px-4 py-2 flex justify-between items-center border-b border-slate-700">
-                                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source Code</span>
-                                                                            <button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[10px] font-bold text-blue-400">Copy</button>
-                                                                        </div>
-                                                                        <pre className="p-4 overflow-x-auto text-[13px] leading-relaxed text-slate-300 font-mono"><code>{log.code}</code></pre>
-                                                                    </div>
-                                                                )}
+                                                                <pre className="p-4 overflow-x-auto text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre>
                                                             </div>
                                                         )}
                                                     </div>
-                                                ))}
+                                                )}
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
                                 ))}
                             </div>

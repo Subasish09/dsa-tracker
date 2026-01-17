@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSA.CORE // Master Analytics</title>
+    <title>DSA TRACKER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -196,8 +196,8 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        const USER = "YOUR_GITHUB_USERNAME";
-        const REPO = "YOUR_REPO_NAME";
+        const USER = "Subasish09";
+        const REPO = "dsa-tracker";
         const RAW_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json`;
         const API_URL = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
 
@@ -305,7 +305,7 @@
                     <nav className="glass-nav sticky top-0 z-50 px-8 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
-                            <h1 className="text-xl font-extrabold tracking-tighter">DSA.CORE</h1>
+                            <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
                         </div>
                         <div className="flex gap-4 items-center">
                             <button onClick={downloadExcel} className="text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg">Excel Export</button>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSA TRACKER</title>
+    <title>DSA.CORE // Master Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -170,7 +170,7 @@
             font-size: 14px;
             line-height: 1.6;
             resize: none;
-            color: var(--text);
+            color: inherit;
         }
 
         .toolbar-btn {
@@ -196,8 +196,8 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        const USER = "Subasish09";
-        const REPO = "dsa-tracker";
+        const USER = "YOUR_GITHUB_USERNAME";
+        const REPO = "YOUR_REPO_NAME";
         const RAW_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json`;
         const API_URL = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
 
@@ -224,7 +224,7 @@
             }, []);
 
             useEffect(() => {
-                if (!isEditing && Prism) Prism.highlightAll();
+                if (!isEditing && typeof Prism !== 'undefined') Prism.highlightAll();
             }, [isEditing, expandedQuestion]);
 
             const insertTag = (tag) => {
@@ -305,7 +305,7 @@
                     <nav className="glass-nav sticky top-0 z-50 px-8 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
-                            <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
+                            <h1 className="text-xl font-extrabold tracking-tighter">DSA.CORE</h1>
                         </div>
                         <div className="flex gap-4 items-center">
                             <button onClick={downloadExcel} className="text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg">Excel Export</button>
@@ -321,14 +321,16 @@
                             <div className="space-y-6">
                                 <div className="stat-card space-y-4">
                                     <h2 className="text-2xl font-black mb-2 tracking-tight text-blue-500">Sync New Problem</h2>
-                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
+
+                                    {/* Inputs with dark mode visibility fix */}
+                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input type="text" placeholder="Topic" className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, topic: e.target.value })} />
-                                        <select className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                        <input type="text" placeholder="Topic" className="p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                        <select className="p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
                                     </div>
 
-                                    <input type="text" placeholder="Question Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, title: e.target.value })} />
+                                    <input type="text" placeholder="Question Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, title: e.target.value })} />
 
                                     <div className="workspace-container shadow-sm">
                                         <div className="editor-pane">
@@ -340,7 +342,7 @@
                                             </div>
                                             <textarea
                                                 ref={editorRef}
-                                                className="editor-area"
+                                                className="editor-area text-slate-900 dark:text-white"
                                                 placeholder="Write logic here..."
                                                 value={entry.logic}
                                                 onChange={e => setEntry({ ...entry, logic: e.target.value })}
@@ -353,7 +355,7 @@
 
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Code Implementation</p>
-                                        <textarea className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl h-48 font-mono text-xs outline-none focus:border-blue-500" placeholder="Paste Source Code here..." onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
+                                        <textarea className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl h-48 font-mono text-xs outline-none focus:border-blue-500" placeholder="Paste Source Code here..." onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
                                     </div>
 
                                     <button onClick={handleSave} className="w-full btn-premium py-5 text-lg shadow-2xl">Push to GitHub Repository</button>
@@ -361,7 +363,6 @@
                             </div>
                         ) : (
                             <div className="max-w-5xl mx-auto space-y-6">
-                                {/* Dashboard view continues exactly as requested... */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                                     <div className="stat-card border-l-4 border-l-orange-500">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Persistence</span>

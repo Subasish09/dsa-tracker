@@ -93,7 +93,7 @@
             transition: all 0.2s;
         }
 
-        /* Markdown Style - FORCE FONT SIZES */
+        /* Markdown Style */
         .markdown-body h1 {
             font-size: 2.25rem !important;
             font-weight: 800 !important;
@@ -109,25 +109,10 @@
             margin-bottom: 0.75rem !important;
         }
 
-        .markdown-body h3 {
-            font-size: 1.25rem !important;
-            font-weight: 700 !important;
-            margin-top: 1.25rem !important;
-        }
-
         .markdown-body ul {
             list-style: disc !important;
             padding-left: 1.5rem !important;
             margin-bottom: 1rem !important;
-        }
-
-        .markdown-body li {
-            margin-bottom: 0.25rem;
-        }
-
-        .markdown-body p {
-            margin-bottom: 1rem;
-            line-height: 1.6;
         }
 
         .markdown-body strong {
@@ -174,9 +159,9 @@
         }
 
         .toolbar-btn {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 800;
             background: var(--bg);
             border: 1px solid var(--border);
@@ -186,6 +171,7 @@
         .toolbar-btn:hover {
             background: var(--primary);
             color: white;
+            border-color: var(--primary);
         }
     </style>
 </head>
@@ -208,13 +194,21 @@
             const [expandedQuestion, setExpandedQuestion] = useState(null);
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
-            const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "" });
+
+            // Draft State Logic
+            const initialEntry = JSON.parse(localStorage.getItem('dsa_draft')) || { title: "", logic: "", code: "", difficulty: "Medium", topic: "" };
+            const [entry, setEntry] = useState(initialEntry);
             const editorRef = useRef(null);
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('theme', theme);
             }, [theme]);
+
+            // Auto-save draft whenever entry changes
+            useEffect(() => {
+                localStorage.setItem('dsa_draft', JSON.stringify(entry));
+            }, [entry]);
 
             useEffect(() => {
                 fetch(RAW_URL + "?v=" + Date.now())
@@ -244,6 +238,14 @@
 
                 setEntry({ ...entry, logic: newText });
                 textarea.focus();
+            };
+
+            const clearDraft = () => {
+                if (confirm("Discard your current progress?")) {
+                    const empty = { title: "", logic: "", code: "", difficulty: "Medium", topic: "" };
+                    setEntry(empty);
+                    localStorage.removeItem('dsa_draft');
+                }
             };
 
             const streakCount = useMemo(() => {
@@ -283,7 +285,9 @@
                     headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ message: `Add ${entry.title}`, content, sha: file.sha })
                 });
-                setData(finalData); setIsEditing(false);
+                setData(finalData);
+                setIsEditing(false);
+                localStorage.removeItem('dsa_draft'); // Wipe draft after successful push
             };
 
             const handleDelete = async (id) => {
@@ -311,7 +315,7 @@
                             <button onClick={downloadExcel} className="text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg">Excel Export</button>
                             <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-xl">{theme === 'light' ? '🌙' : '☀️'}</button>
                             <button onClick={() => setIsEditing(!isEditing)} className="btn-premium">
-                                {isEditing ? "Close" : "+ New Log"}
+                                {isEditing ? "View Feed" : "+ New Log"}
                             </button>
                         </div>
                     </nav>
@@ -320,25 +324,27 @@
                         {isEditing ? (
                             <div className="space-y-6">
                                 <div className="stat-card space-y-4">
-                                    <h2 className="text-2xl font-black mb-2 tracking-tight text-blue-500">Sync New Problem</h2>
+                                    <div className="flex justify-between items-center">
+                                        <h2 className="text-2xl font-black tracking-tight text-blue-500">Editor Workspace</h2>
+                                        <button onClick={clearDraft} className="text-[10px] font-black uppercase text-red-500 hover:underline">Discard Draft</button>
+                                    </div>
 
-                                    {/* Inputs with dark mode visibility fix */}
                                     <input type="password" placeholder="GitHub PAT Token" className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input type="text" placeholder="Topic" className="p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, topic: e.target.value })} />
-                                        <select className="p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                        <input type="text" placeholder="Topic" className="p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-blue-500" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                        <select className="p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
                                     </div>
 
-                                    <input type="text" placeholder="Question Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" onChange={e => setEntry({ ...entry, title: e.target.value })} />
+                                    <input type="text" placeholder="Question Title" className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:border-blue-500" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
 
                                     <div className="workspace-container shadow-sm">
                                         <div className="editor-pane">
                                             <div className="bg-slate-100 dark:bg-slate-800 p-2 flex gap-2 border-b border-slate-200 dark:border-slate-700">
                                                 <button onClick={() => insertTag('h1')} className="toolbar-btn">H1</button>
                                                 <button onClick={() => insertTag('h2')} className="toolbar-btn">H2</button>
-                                                <button onClick={() => insertTag('bold')} className="toolbar-btn">B</button>
-                                                <button onClick={() => insertTag('list')} className="toolbar-btn">UL</button>
+                                                <button onClick={() => insertTag('bold')} className="toolbar-btn">BOLD</button>
+                                                <button onClick={() => insertTag('list')} className="toolbar-btn">LIST</button>
                                             </div>
                                             <textarea
                                                 ref={editorRef}
@@ -349,20 +355,21 @@
                                             ></textarea>
                                         </div>
                                         <div className="preview-pane markdown-body">
-                                            <div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Preview area...*") }}></div>
+                                            <div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Real-time preview...*") }}></div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Code Implementation</p>
-                                        <textarea className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl h-48 font-mono text-xs outline-none focus:border-blue-500" placeholder="Paste Source Code here..." onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
+                                        <textarea className="w-full p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl h-48 font-mono text-xs outline-none focus:border-blue-500" placeholder="Paste Code..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
                                     </div>
 
-                                    <button onClick={handleSave} className="w-full btn-premium py-5 text-lg shadow-2xl">Push to GitHub Repository</button>
+                                    <button onClick={handleSave} className="w-full btn-premium py-5 text-lg shadow-2xl">Push to GitHub</button>
                                 </div>
                             </div>
                         ) : (
                             <div className="max-w-5xl mx-auto space-y-6">
+                                {/* Dashboard View */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                                     <div className="stat-card border-l-4 border-l-orange-500">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Persistence</span>
@@ -373,7 +380,7 @@
                                         <h2 className="text-4xl font-extrabold mt-1">{data.logs.length} Solved</h2>
                                     </div>
                                     <div className="stat-card border-l-4 border-l-indigo-600">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Topics</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Topic Mix</span>
                                         <div className="mt-2 space-y-1">
                                             {Object.entries(groupedLogs).slice(0, 3).map(([t, l]) => (
                                                 <div key={t} className="flex justify-between items-center text-xs font-bold">
@@ -397,7 +404,7 @@
                                                     <h4 className="font-bold group-hover:text-blue-500 transition-colors">{log.title}</h4>
                                                     <div className="flex gap-4 items-center">
                                                         <span className="text-[10px] font-bold opacity-30">{log.date}</span>
-                                                        {token && <button onClick={(e) => { e.stopPropagation(); handleDelete(log.id) }} className="text-red-500 opacity-20 hover:opacity-100">✕</button>}
+                                                        {token && <button onClick={(e) => { e.stopPropagation(); handleDelete(log.id) }} className="text-red-500 opacity-20 hover:opacity-100 transition-opacity">✕</button>}
                                                     </div>
                                                 </div>
                                                 {expandedQuestion === log.id && (

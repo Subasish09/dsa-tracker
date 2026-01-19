@@ -11,7 +11,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -58,8 +57,10 @@
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-wrap: break-word;
+            transition: all 0.3s ease;
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
         }
 
         .stat-card:hover {
@@ -68,94 +69,56 @@
             box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
         }
 
-        .topic-header {
-            background: var(--card);
+        /* Monthly Calendar Styling */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-top: 10px;
             border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: 0.2s;
+            border-radius: 8px;
             overflow: hidden;
+            background: var(--border);
         }
 
-        .question-item {
-            border-left: 2px solid var(--border);
-            margin-left: 0.5rem;
-            padding-left: 1rem;
-            position: relative;
-            margin-bottom: 1rem;
-            overflow-wrap: break-word;
+        .calendar-day-header {
+            background: var(--card);
+            font-size: 8px;
+            font-weight: 800;
+            text-align: center;
+            padding: 4px 0;
+            opacity: 0.5;
         }
 
-        /* --- ADVANCED MARKDOWN STYLING --- */
+        .calendar-day {
+            background: var(--card);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .day-active {
+            background: var(--primary) !important;
+            color: white !important;
+            font-weight: 800;
+        }
+
         .markdown-body h1 {
             font-size: 1.8rem !important;
             font-weight: 800 !important;
-            margin: 1.5rem 0 1rem 0 !important;
             border-bottom: 2px solid var(--border);
             padding-bottom: 0.5rem;
         }
 
-        .markdown-body h2 {
-            font-size: 1.4rem !important;
-            font-weight: 700 !important;
-            margin: 1.2rem 0 0.8rem 0 !important;
-        }
-
-        .markdown-body p {
-            margin-bottom: 1rem !important;
-            line-height: 1.6;
-        }
-
-        /* List Styling */
         .markdown-body ul {
             list-style-type: disc !important;
-            padding-left: 2rem !important;
-            margin-bottom: 1rem !important;
+            padding-left: 1.5rem !important;
         }
 
-        .markdown-body ol {
-            list-style-type: decimal !important;
-            padding-left: 2rem !important;
-            margin-bottom: 1rem !important;
-        }
-
-        .markdown-body li {
-            margin-bottom: 0.4rem !important;
-            display: list-item !important;
-        }
-
-        /* Table Styling */
-        .markdown-body table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin: 1rem 0 !important;
-            font-size: 0.9rem;
-        }
-
-        .markdown-body th,
-        .markdown-body td {
-            border: 1px solid var(--border) !important;
-            padding: 8px 12px !important;
-            text-align: left !important;
-        }
-
-        .markdown-body th {
-            background: rgba(var(--primary), 0.05) !important;
-            font-weight: 700 !important;
-        }
-
-        /* Inline Code */
-        .markdown-body code:not([class*="language-"]) {
-            background: rgba(59, 130, 246, 0.1) !important;
-            padding: 2px 6px !important;
-            border-radius: 4px !important;
-            font-family: monospace;
-            font-size: 0.9em;
-            color: var(--primary);
-        }
-
-        /* Workspace Responsive Fix */
+        /* Split Workspace Container */
         .workspace-container {
             display: flex;
             flex-direction: column;
@@ -169,7 +132,7 @@
         @media (min-width: 1024px) {
             .workspace-container {
                 flex-direction: row;
-                height: 600px;
+                height: 550px;
             }
         }
 
@@ -192,7 +155,7 @@
             padding: 20px;
             overflow-y: auto;
             background: var(--bg);
-            min-height: 300px;
+            height: 100%;
         }
 
         .editor-area {
@@ -206,18 +169,7 @@
             font-size: 14px;
             line-height: 1.6;
             resize: none;
-            color: inherit;
-            min-height: 300px;
-        }
-
-        .calendar-input {
-            cursor: pointer;
-        }
-
-        ::-webkit-calendar-picker-indicator {
-            transform: scale(1.4);
-            cursor: pointer;
-            filter: invert(0.5);
+            height: 100%;
         }
 
         .toolbar-btn {
@@ -250,12 +202,11 @@
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
 
-            const getToday = () => new Date().toISOString().split('T')[0];
+            // Calendar month navigation
+            const [viewDate, setViewDate] = useState(new Date());
 
-            const initialEntry = JSON.parse(localStorage.getItem('dsa_draft')) || {
-                title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: getToday()
-            };
-            const [entry, setEntry] = useState(initialEntry);
+            const getToday = () => new Date().toISOString().split('T')[0];
+            const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: getToday() });
             const editorRef = useRef(null);
 
             useEffect(() => {
@@ -264,36 +215,27 @@
             }, [theme]);
 
             useEffect(() => {
-                localStorage.setItem('dsa_draft', JSON.stringify(entry));
-            }, [entry]);
-
-            useEffect(() => {
                 fetch(RAW_URL + "?v=" + Date.now())
                     .then(res => res.json())
                     .then(resData => setData(resData.logs ? resData : { logs: resData, history: [] }))
                     .catch(() => setData({ logs: [], history: [] }));
             }, []);
 
-            useEffect(() => {
-                if (!isEditing && typeof Prism !== 'undefined') Prism.highlightAll();
-            }, [isEditing, expandedQuestion]);
+            useEffect(() => { if (!isEditing && typeof Prism !== 'undefined') Prism.highlightAll(); }, [isEditing, expandedQuestion]);
 
-            const insertTag = (tag) => {
-                const textarea = editorRef.current;
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const text = textarea.value;
-                const before = text.substring(0, start);
-                const selected = text.substring(start, end);
-                const after = text.substring(end);
-                let newText = "";
-                if (tag === 'bold') newText = `${before}**${selected}**${after}`;
-                if (tag === 'h1') newText = `${before}\n# ${selected}${after}`;
-                if (tag === 'h2') newText = `${before}\n## ${selected}${after}`;
-                if (tag === 'list') newText = `${before}\n- ${selected}${after}`;
-                setEntry({ ...entry, logic: newText });
-                textarea.focus();
-            };
+            const calendarData = useMemo(() => {
+                const year = viewDate.getFullYear();
+                const month = viewDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const days = [];
+                for (let i = 0; i < firstDay; i++) days.push({ day: null });
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const ds = new Date(year, month, i).toLocaleDateString();
+                    days.push({ day: i, active: (data.history || []).includes(ds) || data.logs.some(l => l.date === ds) });
+                }
+                return { days, monthName: viewDate.toLocaleString('default', { month: 'short', year: '2-digit' }) };
+            }, [data.history, data.logs, viewDate]);
 
             const streakCount = useMemo(() => {
                 const dates = data.history || [];
@@ -316,7 +258,7 @@
                 const ws = XLSX.utils.json_to_sheet(data.logs);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "DSA");
-                XLSX.writeFile(wb, "DSA_Report.xlsx");
+                XLSX.writeFile(wb, "DSA_Tracker_Data.xlsx");
             };
 
             const handleSave = async () => {
@@ -330,39 +272,23 @@
                     };
                     const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
                     await fetch(API_URL, {
-                        method: "PUT",
-                        headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                        method: "PUT", headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
                         body: JSON.stringify({ message: `Add ${entry.title}`, content, sha: file.sha })
                     });
                     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                     setData(finalData); setIsEditing(false);
-                    localStorage.removeItem('dsa_draft');
-                } catch (e) { alert("Save failed. Check Token."); }
-            };
-
-            const handleDelete = async (id) => {
-                if (!window.confirm("Delete entry?")) return;
-                const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
-                const file = await res.json();
-                const finalData = { ...data, logs: data.logs.filter(log => log.id !== id) };
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
-                await fetch(API_URL, {
-                    method: "PUT",
-                    headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "Delete log", content, sha: file.sha })
-                });
-                setData(finalData);
+                } catch (e) { alert("GitHub Update Failed."); }
             };
 
             return (
                 <div className="min-h-screen pb-10 w-full overflow-x-hidden">
                     <nav className="glass-nav sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 flex justify-between items-center">
                         <div className="flex items-center gap-2 md:gap-4">
-                            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg text-sm md:text-base">C</div>
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
                             <h1 className="text-sm md:text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
                         </div>
                         <div className="flex gap-2 md:gap-4 items-center">
-                            <button onClick={downloadExcel} className="text-[10px] md:text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-2 py-1 md:px-3 md:py-2 rounded-lg transition-all">Excel Export</button>
+                            <button onClick={downloadExcel} className="text-[10px] md:text-xs font-bold opacity-50 hover:opacity-100 uppercase border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg">Excel</button>
                             <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-lg p-1 md:p-2">{theme === 'light' ? '🌙' : '☀️'}</button>
                             <button onClick={() => setIsEditing(!isEditing)} className="bg-blue-600 text-white px-3 py-1.5 md:px-6 md:py-2 rounded-xl font-bold text-[10px] md:text-sm shadow-lg whitespace-nowrap">{isEditing ? "Close" : "+ Log"}</button>
                         </div>
@@ -370,87 +296,77 @@
 
                     <main className="max-w-[1600px] mx-auto p-4 md:p-8">
                         {isEditing ? (
-                            <div className="space-y-4 md:space-y-6">
-                                <div className="stat-card space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <h2 className="text-lg md:text-2xl font-black tracking-tight text-blue-500">Editor Workspace</h2>
-                                        <button onClick={() => { if (confirm("Discard?")) { setEntry({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: getToday() }); localStorage.removeItem('dsa_draft'); } }} className="text-[10px] font-black uppercase text-red-500 hover:underline">Discard</button>
-                                    </div>
-                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-sm" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value) }} />
+                            <div className="space-y-4">
+                                <div className="stat-card !min-h-0 space-y-4">
+                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={token} onChange={e => setToken(e.target.value)} />
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        <input type="date" className="calendar-input w-full p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
-                                        <input type="text" placeholder="Topic" className="p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
-                                        <select className="p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                        <input type="date" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
+                                        <input type="text" placeholder="Topic" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                        <select className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
                                     </div>
-                                    <input type="text" placeholder="Question Title" className="w-full p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
-                                    <div className="workspace-container shadow-sm">
+                                    <input type="text" placeholder="Question Title" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
+
+                                    <div className="workspace-container">
                                         <div className="editor-pane">
-                                            <div className="bg-slate-100 dark:bg-slate-800 p-2 flex gap-1 md:gap-2 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
-                                                <button onClick={() => insertTag('h1')} className="toolbar-btn">H1</button>
-                                                <button onClick={() => insertTag('h2')} className="toolbar-btn">H2</button>
-                                                <button onClick={() => insertTag('bold')} className="toolbar-btn">B</button>
-                                                <button onClick={() => insertTag('list')} className="toolbar-btn">LIST</button>
+                                            <div className="bg-slate-100 dark:bg-slate-800 p-2 flex gap-1 border-b border-slate-200 dark:border-slate-700">
+                                                {['h1', 'bold', 'list'].map(t => <button key={t} onClick={() => {
+                                                    const area = editorRef.current;
+                                                    const start = area.selectionStart; const end = area.selectionEnd;
+                                                    const val = area.value;
+                                                    let mod = t === 'h1' ? `# ${val.substring(start, end)}` : t === 'bold' ? `**${val.substring(start, end)}**` : `\n- ${val.substring(start, end)}`;
+                                                    setEntry({ ...entry, logic: val.substring(0, start) + mod + val.substring(end) });
+                                                }} className="toolbar-btn uppercase">{t}</button>)}
                                             </div>
-                                            <textarea ref={editorRef} className="editor-area text-slate-900 dark:text-white" placeholder="Write logic here..." value={entry.logic} onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
+                                            <textarea ref={editorRef} className="editor-area text-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="Write logic here..." value={entry.logic} onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
                                         </div>
-                                        <div className="preview-pane markdown-body">
-                                            <div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Markdown preview will appear here...*") }}></div>
-                                        </div>
+                                        <div className="preview-pane markdown-body"><div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Real-time preview...*") }}></div></div>
                                     </div>
-                                    <textarea className="w-full p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl h-32 md:h-48 font-mono text-xs outline-none" placeholder="Paste Code..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
-                                    <button onClick={handleSave} className="w-full btn-premium py-4 md:py-5 text-sm md:text-lg shadow-2xl">Push to GitHub</button>
+                                    <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-xl h-32 font-mono text-xs" placeholder="Paste Code..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
+                                    <button onClick={handleSave} className="w-full bg-blue-600 text-white py-4 font-bold rounded-xl">Push to GitHub</button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="max-w-5xl mx-auto space-y-4 md:space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+                            <div className="max-w-5xl mx-auto space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="stat-card border-l-4 border-l-orange-500">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Persistence</span>
-                                        <h2 className="text-2xl md:text-4xl font-extrabold mt-1">{streakCount}d Streak</h2>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[10px] font-black uppercase opacity-40">Persistence</span>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} className="text-xs font-bold opacity-40 hover:opacity-100 px-1">&lt;</button>
+                                                <span className="text-[10px] font-bold text-orange-500">{calendarData.monthName}</span>
+                                                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} className="text-xs font-bold opacity-40 hover:opacity-100 px-1">&gt;</button>
+                                            </div>
+                                        </div>
+                                        <div className="calendar-grid">
+                                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="calendar-day-header">{d}</div>)}
+                                            {calendarData.days.map((d, i) => <div key={i} className={`calendar-day ${d.active ? 'day-active' : ''}`}>{d.day}</div>)}
+                                        </div>
+                                        <h2 className="text-xl font-extrabold mt-3">{streakCount}d Streak</h2>
                                     </div>
-                                    <div className="stat-card border-l-4 border-l-blue-600">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Progress</span>
-                                        <h2 className="text-2xl md:text-4xl font-extrabold mt-1">{data.logs.length} Solved</h2>
+                                    <div className="stat-card border-l-4 border-l-blue-600 justify-center">
+                                        <span className="text-[10px] font-black uppercase opacity-40">Progress</span>
+                                        <h2 className="text-4xl md:text-5xl font-extrabold mt-2 text-blue-500">{data.logs.length}</h2>
+                                        <p className="text-xs font-bold opacity-40 mt-1 uppercase">Questions Solved</p>
                                     </div>
                                     <div className="stat-card border-l-4 border-l-indigo-600">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Topic Mix</span>
-                                        <div className="mt-2 space-y-1">
+                                        <span className="text-[10px] font-black uppercase opacity-40">Topic Mix</span>
+                                        <div className="mt-3 space-y-2">
                                             {Object.entries(groupedLogs).slice(0, 3).map(([t, l]) => (
-                                                <div key={t} className="flex justify-between items-center text-[10px] md:text-xs font-bold">
-                                                    <span className="opacity-60 truncate mr-2">{t}</span>
-                                                    <span className="text-blue-500">{l.length}</span>
-                                                </div>
+                                                <div key={t} className="flex justify-between items-center text-xs font-bold"><span className="opacity-60 truncate mr-2">{t}</span><span className="text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full text-[10px]">{l.length}</span></div>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
                                 {Object.entries(groupedLogs).map(([topic, logs]) => (
                                     <div key={topic}>
-                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center">
-                                            <span className="text-base md:text-lg font-black truncate mr-2">{topic}</span>
-                                            <span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full flex-shrink-0">{logs.length} Qs</span>
-                                        </div>
+                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center"><span className="text-base md:text-lg font-black">{topic}</span><span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span></div>
                                         {expandedTopic === topic && logs.map(log => (
                                             <div key={log.id} className="question-item">
-                                                <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group">
-                                                    <h4 className="font-bold group-hover:text-blue-500 transition-colors text-sm md:text-base pr-2">{log.title}</h4>
-                                                    <div className="flex gap-2 md:gap-4 items-center flex-shrink-0">
-                                                        <span className="text-[8px] md:text-[10px] font-bold opacity-30">{log.date}</span>
-                                                        {token && <button onClick={(e) => { e.stopPropagation(); handleDelete(log.id) }} className="text-red-500 opacity-40 hover:opacity-100 text-xs md:text-base">✕</button>}
-                                                    </div>
-                                                </div>
+                                                <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group"><h4 className="font-bold group-hover:text-blue-500 transition-colors text-sm md:text-base pr-2">{log.title}</h4><div className="flex gap-2 md:gap-4 items-center flex-shrink-0"><span className="text-[8px] md:text-[10px] font-bold opacity-30">{log.date}</span><button onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) { const fd = { ...data, logs: data.logs.filter(l => l.id !== log.id) }; setData(fd); fetch(API_URL, { method: "PUT", headers: { Authorization: `token ${token}` }, body: JSON.stringify({ message: "Del", content: btoa(unescape(encodeURIComponent(JSON.stringify(fd, null, 2)))), sha: log.sha }) }) } }} className="text-red-500 opacity-40 hover:opacity-100 text-xs md:text-base">✕</button></div></div>
                                                 {expandedQuestion === log.id && (
                                                     <div className="mt-4 p-4 md:p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">
                                                         <div className="markdown-body text-xs md:text-sm leading-relaxed opacity-80 mb-4" dangerouslySetInnerHTML={{ __html: marked.parse(log.logic || "") }}></div>
-                                                        {log.code && (
-                                                            <div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden max-w-full">
-                                                                <div className="bg-[#161b22] px-3 md:px-4 py-2 border-b border-[#30363d] flex justify-between items-center">
-                                                                    <span className="text-[8px] md:text-[10px] font-bold opacity-40 uppercase">Code</span>
-                                                                    <button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[8px] md:text-[10px] font-bold text-blue-400">Copy</button>
-                                                                </div>
-                                                                <pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre>
-                                                            </div>
-                                                        )}
+                                                        {log.code && (<div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden max-w-full"><div className="bg-[#161b22] px-3 md:px-4 py-2 border-b border-[#30363d] flex justify-between items-center"><span className="text-[8px] md:text-[10px] font-bold opacity-40 uppercase">Code</span><button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[8px] md:text-[10px] font-bold text-blue-400 uppercase">Copy</button></div><pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre></div>)}
                                                     </div>
                                                 )}
                                             </div>

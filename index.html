@@ -87,20 +87,75 @@
             overflow-wrap: break-word;
         }
 
+        /* --- ADVANCED MARKDOWN STYLING --- */
         .markdown-body h1 {
-            font-size: 1.75rem !important;
+            font-size: 1.8rem !important;
             font-weight: 800 !important;
-            margin-bottom: 1rem !important;
+            margin: 1.5rem 0 1rem 0 !important;
             border-bottom: 2px solid var(--border);
             padding-bottom: 0.5rem;
         }
 
         .markdown-body h2 {
-            font-size: 1.25rem !important;
+            font-size: 1.4rem !important;
             font-weight: 700 !important;
-            margin-top: 1.25rem !important;
+            margin: 1.2rem 0 0.8rem 0 !important;
         }
 
+        .markdown-body p {
+            margin-bottom: 1rem !important;
+            line-height: 1.6;
+        }
+
+        /* List Styling */
+        .markdown-body ul {
+            list-style-type: disc !important;
+            padding-left: 2rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .markdown-body ol {
+            list-style-type: decimal !important;
+            padding-left: 2rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .markdown-body li {
+            margin-bottom: 0.4rem !important;
+            display: list-item !important;
+        }
+
+        /* Table Styling */
+        .markdown-body table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin: 1rem 0 !important;
+            font-size: 0.9rem;
+        }
+
+        .markdown-body th,
+        .markdown-body td {
+            border: 1px solid var(--border) !important;
+            padding: 8px 12px !important;
+            text-align: left !important;
+        }
+
+        .markdown-body th {
+            background: rgba(var(--primary), 0.05) !important;
+            font-weight: 700 !important;
+        }
+
+        /* Inline Code */
+        .markdown-body code:not([class*="language-"]) {
+            background: rgba(59, 130, 246, 0.1) !important;
+            padding: 2px 6px !important;
+            border-radius: 4px !important;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: var(--primary);
+        }
+
+        /* Workspace Responsive Fix */
         .workspace-container {
             display: flex;
             flex-direction: column;
@@ -307,7 +362,7 @@
                             <h1 className="text-sm md:text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
                         </div>
                         <div className="flex gap-2 md:gap-4 items-center">
-                            <button onClick={downloadExcel} className="text-[10px] md:text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-2 py-1 md:px-3 md:py-2 rounded-lg transition-all">Excel</button>
+                            <button onClick={downloadExcel} className="text-[10px] md:text-xs font-bold opacity-50 hover:opacity-100 uppercase tracking-widest border border-slate-200 dark:border-slate-800 px-2 py-1 md:px-3 md:py-2 rounded-lg transition-all">Excel Export</button>
                             <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-lg p-1 md:p-2">{theme === 'light' ? '🌙' : '☀️'}</button>
                             <button onClick={() => setIsEditing(!isEditing)} className="bg-blue-600 text-white px-3 py-1.5 md:px-6 md:py-2 rounded-xl font-bold text-[10px] md:text-sm shadow-lg whitespace-nowrap">{isEditing ? "Close" : "+ Log"}</button>
                         </div>
@@ -339,7 +394,7 @@
                                             <textarea ref={editorRef} className="editor-area text-slate-900 dark:text-white" placeholder="Write logic here..." value={entry.logic} onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
                                         </div>
                                         <div className="preview-pane markdown-body">
-                                            <div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Preview...*") }}></div>
+                                            <div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Markdown preview will appear here...*") }}></div>
                                         </div>
                                     </div>
                                     <textarea className="w-full p-3 md:p-4 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl h-32 md:h-48 font-mono text-xs outline-none" placeholder="Paste Code..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
@@ -393,7 +448,7 @@
                                                                     <span className="text-[8px] md:text-[10px] font-bold opacity-40 uppercase">Code</span>
                                                                     <button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[8px] md:text-[10px] font-bold text-blue-400">Copy</button>
                                                                 </div>
-                                                                <pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code>{log.code}</code></pre>
+                                                                <pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre>
                                                             </div>
                                                         )}
                                                     </div>

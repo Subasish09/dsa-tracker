@@ -1,4 +1,16 @@
 {
-  "logs": [],
-  "history": []
+  "logs": [
+    {
+      "title": "Given a sorted array of integers and a target value, determine if there exist two numbers whose sum equals the target",
+      "logic": "# Two Pointers Technique (Pattern Notes)\n\n## When to Use Two Pointers\n\nUse **Two Pointers** when you see:\n- Sorted array or sorted string\n- Problems asking for a pair / triplet\n- Conditions like sum, difference, comparison\n- Need to optimize from O(n²) to O(n)\n\n---\n\n## Canonical Problem Type\n\n> Given a sorted array, determine if there exist two elements whose sum equals a target.\n\n---\n\n## Core Idea\n\nBecause the array is **sorted**:\n- Left side has the smallest values\n- Right side has the largest values\n\nUsing two pointers allows us to adjust the sum intelligently instead of checking all pairs.\n\n---\n\n## Pointer Initialization\n\n- `left` starts at index `0`\n- `right` starts at index `n - 1`\n\n---\n\n## Pointer Movement Rules (Key Logic)\n\nLet: current_sum = nums[left] + nums[right]\n\n\n### If `current_sum == target`\n- Pair found\n- Return `true`\n\n### If `current_sum < target`\n- Sum is too small\n- Move `left` pointer to the right (`left++`)\n- Reason: increase the sum\n\n### If `current_sum > target`\n- Sum is too large\n- Move `right` pointer to the left (`right--`)\n- Reason: decrease the sum\n\n---\n\n## Loop Condition\n\nwhile (left < right)\n\n\nReason:\n- A number cannot pair with itself\n- All valid pairs are checked before pointers cross\n\n---\n\n## Dry Run Example\n\nArray: `[1, 2, 4, 6, 9]`\n\nTarget: 8\n\nSteps: \\\nL=1, R=9 → sum=10 → move R \\\nL=1, R=6 → sum=7 → move L \\\nL=2, R=6 → sum=8 → found \n\n\n---\n\n## Time & Space Complexity\n\n- Time Complexity: `O(n)`\n- Space Complexity: `O(1)`\n\n---\n\n## Common Mistakes to Avoid\n\n- Using nested loops\n- Ignoring the sorted property\n- Moving both pointers at the same time\n- Using extra data structures unnecessarily\n\n---\n\n## Interview One-Line Explanation\n\n> Since the array is sorted, I use two pointers from both ends.\n> If the sum is smaller than the target, I move the left pointer.\n> If it is larger, I move the right pointer.\n\n---\n\n## Pattern Recognition Trigger\n\nIf a problem mentions:\n- Sorted array\n- Pair of elements\n- Sum or comparison\n\nThink immediately:\n**Two Pointers**\n",
+      "code": "/*\nGiven a sorted array of integers and a target value, determine if there exist two numbers\nwhose sum equals the target\n*/\n\n#include <iostream>\n#include <vector>\nusing namespace std;\n\nbool hasPairWithSum(vector<int>& nums, int target) {\n    int l = 0, r = nums.size() - 1;\n\n    while (l < r) {\n        int sum = nums[l] + nums[r];\n\n        if (sum < target) {\n            l++;\n        } else if (sum > target) {\n            r--;\n        } else {\n            return true;\n        }\n    }\n    return false;\n}\n\n\nint main() {\n    vector<int> v = {2, 3, 5, 8, 11};\n    int target = 16;\n\n    bool present = hasPairWithSum(v, target);\n\n    cout << \"The target is \" << present << endl;\n\n    return 0;\n}\n",
+      "difficulty": "Easy",
+      "topic": "Array - Two Pointer",
+      "date": "19/01/2026",
+      "id": 1768830769172
+    }
+  ],
+  "history": [
+    "19/01/2026"
+  ]
 }

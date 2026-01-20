@@ -58,7 +58,7 @@
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 24px;
+            padding: 20px;
             transition: all 0.3s ease;
             min-height: 280px;
             display: flex;
@@ -84,10 +84,10 @@
 
         .calendar-day-header {
             background: var(--card);
-            font-size: 8px;
+            font-size: 10px;
             font-weight: 800;
             text-align: center;
-            padding: 6px 0;
+            padding: 4px 0;
             opacity: 0.5;
         }
 
@@ -105,19 +105,26 @@
             background: var(--primary) !important;
             color: white !important;
             font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
         }
 
-        /* SPACIOUS MARKDOWN STYLES */
+        .day-active:hover {
+            filter: brightness(1.2);
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
         .markdown-body {
-            line-height: 1.8;
-            color: inherit;
-            font-size: 1.05rem;
+            line-height: 1.8 !important;
+            font-size: 1rem !important;
+            color: inherit !important;
+            background: transparent !important;
         }
 
         .markdown-body h1 {
             font-size: 2rem !important;
             font-weight: 800 !important;
-            margin: 1.5rem 0 1rem 0 !important;
             border-bottom: 2px solid var(--border);
             padding-bottom: 0.5rem;
             color: var(--primary) !important;
@@ -126,18 +133,13 @@
         .markdown-body h2 {
             font-size: 1.6rem !important;
             font-weight: 700 !important;
-            margin: 1.4rem 0 0.8rem 0 !important;
+            color: var(--text) !important;
         }
 
         .markdown-body h3 {
             font-size: 1.3rem !important;
             font-weight: 700 !important;
-            margin: 1.2rem 0 0.6rem 0 !important;
             color: var(--primary) !important;
-        }
-
-        .markdown-body p {
-            margin-bottom: 1.2rem !important;
         }
 
         .markdown-body ul {
@@ -149,20 +151,16 @@
         .markdown-body li {
             display: list-item !important;
             margin-bottom: 0.5rem;
+            color: inherit !important;
         }
 
         .markdown-body code:not([class*="language-"]) {
-            background: rgba(120, 120, 120, 0.1);
+            background: rgba(120, 120, 120, 0.15);
             padding: 3px 6px;
             border-radius: 6px;
             font-family: monospace;
             font-weight: 600;
             color: #ef4444;
-        }
-
-        [data-theme='dark'] .markdown-body code:not([class*="language-"]) {
-            color: #f87171;
-            background: rgba(255, 255, 255, 0.1);
         }
 
         .workspace-container {
@@ -178,7 +176,7 @@
         @media (min-width: 1024px) {
             .workspace-container {
                 flex-direction: row;
-                height: 580px;
+                height: 550px;
             }
         }
 
@@ -200,14 +198,14 @@
             flex: 1;
             padding: 24px;
             overflow-y: auto;
-            background: var(--bg);
+            background: transparent !important;
             height: 100%;
         }
 
         .editor-area {
             flex: 1;
             width: 100%;
-            padding: 20px;
+            padding: 16px;
             border: none;
             outline: none;
             background: transparent;
@@ -226,6 +224,81 @@
             background: var(--bg);
             border: 1px solid var(--border);
             cursor: pointer;
+        }
+
+        .search-input {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 20px;
+            width: 100%;
+            outline: none;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .filter-chip {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        .chip-easy.active {
+            background: #22c55e !important;
+            color: white !important;
+            border-color: #22c55e !important;
+        }
+
+        .chip-medium.active {
+            background: #f97316 !important;
+            color: white !important;
+            border-color: #f97316 !important;
+        }
+
+        .chip-hard.active {
+            background: #ef4444 !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+        }
+
+        .diff-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        @keyframes pulsate {
+            0% {
+                background-color: rgba(254, 240, 138, 0.8);
+            }
+
+            50% {
+                background-color: rgba(250, 204, 21, 1);
+            }
+
+            100% {
+                background-color: rgba(254, 240, 138, 0.8);
+            }
+        }
+
+        .highlight {
+            animation: pulsate 2s infinite ease-in-out;
+            color: #1e293b;
+            border-radius: 4px;
+            padding: 0 4px;
+            font-weight: 700;
+            box-shadow: 0 0 5px rgba(250, 204, 21, 0.5);
+        }
+
+        [data-theme='dark'] .highlight {
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(133, 77, 14, 0.8);
         }
     </style>
 </head>
@@ -249,29 +322,39 @@
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
             const [viewDate, setViewDate] = useState(new Date());
+            const [lastSync, setLastSync] = useState("");
+
+            const [searchTerm, setSearchTerm] = useState("");
+            const [diffFilter, setDiffFilter] = useState({ Easy: true, Medium: true, Hard: true });
 
             const getToday = () => new Date().toISOString().split('T')[0];
             const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: getToday() });
             const editorRef = useRef(null);
+
+            const diffColors = { Easy: "#22c55e", Medium: "#f97316", Hard: "#ef4444" };
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('theme', theme);
             }, [theme]);
 
-            useEffect(() => {
+            const fetchData = () => {
                 fetch(RAW_URL + "?v=" + Date.now())
                     .then(res => res.json())
-                    .then(resData => setData(resData.logs ? resData : { logs: resData, history: [] }))
+                    .then(resData => {
+                        setData(resData.logs ? resData : { logs: resData, history: [] });
+                        const now = new Date();
+                        setLastSync(now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ", " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                    })
                     .catch(() => setData({ logs: [], history: [] }));
-            }, []);
+            };
 
-            useEffect(() => { if (!isEditing && typeof Prism !== 'undefined') Prism.highlightAll(); }, [isEditing, expandedQuestion]);
+            useEffect(() => fetchData(), []);
 
-            const getCompareKey = (dateInput) => {
-                const d = new Date(dateInput);
-                if (isNaN(d.getTime())) return null;
-                return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+            const getISOKey = (dateStr) => {
+                if (!dateStr) return null;
+                const d = new Date(dateStr.includes('/') ? dateStr.split('/').reverse().join('-') : dateStr);
+                return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
             };
 
             const calendarData = useMemo(() => {
@@ -280,35 +363,65 @@
                 const firstDay = new Date(year, month, 1).getDay();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const days = [];
-
-                const activeKeys = new Set([
-                    ...(data.history || []).map(d => getCompareKey(d)),
-                    ...data.logs.map(l => getCompareKey(l.date))
+                const activeDates = new Set([
+                    ...(data.history || []).map(d => getISOKey(d)),
+                    ...data.logs.map(l => getISOKey(l.date))
                 ]);
-
                 for (let i = 0; i < firstDay; i++) days.push({ day: null });
                 for (let i = 1; i <= daysInMonth; i++) {
-                    const key = `${year}-${month}-${i}`;
-                    days.push({ day: i, active: activeKeys.has(key) });
+                    const currentISO = new Date(year, month, i + 1).toISOString().split('T')[0];
+                    const rawDateLabel = new Date(year, month, i).toLocaleDateString('en-GB'); // Format matching your data
+                    days.push({ day: i, active: activeDates.has(currentISO), raw: rawDateLabel });
                 }
                 return { days, monthName: viewDate.toLocaleString('default', { month: 'short', year: '2-digit' }) };
             }, [data.history, data.logs, viewDate]);
 
+            const highlightText = (text, term) => {
+                if (!term.trim()) return text;
+                const regex = new RegExp(`(${term})`, 'gi');
+                const parts = text.split(regex);
+                return parts.map((part, i) =>
+                    regex.test(part) ? <span key={i} className="highlight">{part}</span> : part
+                );
+            };
+
+            const filteredArray = useMemo(() => {
+                const term = searchTerm.toLowerCase();
+                return data.logs.filter(log => {
+                    const matchText = log.title.toLowerCase().includes(term) ||
+                        (log.topic || "").toLowerCase().includes(term) ||
+                        (log.code || "").toLowerCase().includes(term) ||
+                        (log.date || "").toLowerCase().includes(term);
+                    return matchText && diffFilter[log.difficulty || "Medium"];
+                });
+            }, [data.logs, searchTerm, diffFilter]);
+
             const groupedLogs = useMemo(() => {
-                const sorted = [...data.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+                const sorted = [...filteredArray].sort((a, b) => new Date(b.date) - new Date(a.date));
                 return sorted.reduce((acc, log) => {
                     const t = log.topic || "General";
                     if (!acc[t]) acc[t] = [];
                     acc[t].push(log);
                     return acc;
                 }, {});
-            }, [data.logs]);
+            }, [filteredArray]);
+
+            const diffCounts = useMemo(() => {
+                const term = searchTerm.toLowerCase();
+                return data.logs.filter(l =>
+                    l.title.toLowerCase().includes(term) || (l.topic || "").toLowerCase().includes(term) || (l.code || "").toLowerCase().includes(term) || (l.date || "").toLowerCase().includes(term)
+                ).reduce((acc, log) => {
+                    const d = log.difficulty || "Medium";
+                    acc[d]++;
+                    return acc;
+                }, { Easy: 0, Medium: 0, Hard: 0 });
+            }, [data.logs, searchTerm]);
 
             const handleSave = async () => {
                 try {
                     const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
                     const file = await res.json();
-                    const selectedDate = new Date(entry.date).toLocaleDateString();
+                    const selectedDate = new Date(entry.date).toLocaleDateString('en-GB');
                     const finalData = {
                         logs: [{ ...entry, id: Date.now(), date: selectedDate }, ...data.logs],
                         history: [...new Set([...data.history, selectedDate])]
@@ -320,6 +433,8 @@
                     });
                     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                     setData(finalData); setIsEditing(false);
+                    const now = new Date();
+                    setLastSync(now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ", " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
                 } catch (e) { alert("Save failed."); }
             };
 
@@ -328,17 +443,20 @@
                     <nav className="glass-nav sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 flex justify-between items-center">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
-                            <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
+                            <div>
+                                <h1 className="text-xl font-extrabold tracking-tighter leading-none uppercase">DSA Tracker</h1>
+                                {lastSync && <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Last Sync: {lastSync}</p>}
+                            </div>
                         </div>
                         <div className="flex gap-4 items-center">
                             <button onClick={() => {
-                                const ws = XLSX.utils.json_to_sheet(data.logs);
+                                const ws = XLSX.utils.json_to_sheet(filteredArray);
                                 const wb = XLSX.utils.book_new();
                                 XLSX.utils.book_append_sheet(wb, ws, "DSA");
                                 XLSX.writeFile(wb, "DSA_Report.xlsx");
-                            }} className="text-xs font-bold opacity-50 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg">Excel Export</button>
+                            }} className="text-xs font-bold opacity-50 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg hover:opacity-100 transition-all">Excel Export</button>
                             <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-lg p-1 md:p-2">{theme === 'light' ? '🌙' : '☀️'}</button>
-                            <button onClick={() => setIsEditing(!isEditing)} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm">{isEditing ? "Close" : "+ Log"}</button>
+                            <button onClick={() => setIsEditing(!isEditing)} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-xl">{isEditing ? "Close" : "+ Log"}</button>
                         </div>
                     </nav>
 
@@ -346,7 +464,7 @@
                         {isEditing ? (
                             <div className="space-y-4">
                                 <div className="stat-card !min-h-0 space-y-4">
-                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={token} onChange={e => setToken(e.target.value)} />
+                                    <input type="password" placeholder="GitHub Token" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={token} onChange={e => setToken(e.target.value)} />
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <input type="date" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
                                         <input type="text" placeholder="Topic" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
@@ -386,37 +504,70 @@
                                         </div>
                                         <div className="calendar-grid">
                                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="calendar-day-header">{d}</div>)}
-                                            {calendarData.days.map((d, i) => <div key={i} className={`calendar-day ${d.active ? 'day-active' : ''}`}>{d.day}</div>)}
+                                            {calendarData.days.map((d, i) => (
+                                                <div
+                                                    key={i}
+                                                    onClick={() => d.active && setSearchTerm(d.raw)}
+                                                    className={`calendar-day ${d.active ? 'day-active' : ''}`}
+                                                    title={d.active ? `Show questions from ${d.raw}` : ""}
+                                                >
+                                                    {d.day}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                     <div className="stat-card border-l-4 border-l-blue-600 justify-center text-center">
                                         <span className="text-[10px] font-black uppercase opacity-40 mb-2">Progress</span>
-                                        <h2 className="text-5xl font-extrabold text-blue-500">{data.logs.length}</h2>
-                                        <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Questions Solved</p>
+                                        <h2 className="text-6xl font-extrabold text-blue-500">{data.logs.length}</h2>
+                                        <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Solved</p>
                                         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                            <h2 className="text-5xl font-extrabold text-blue-500">{[...new Set(data.history)].length}</h2>
+                                            <h2 className="text-6xl font-extrabold text-blue-500">{[...new Set(data.history)].length}</h2>
                                             <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Days Worked</p>
                                         </div>
                                     </div>
                                     <div className="stat-card border-l-4 border-l-indigo-600">
-                                        <span className="text-[10px] font-black uppercase opacity-40">Topic Mix</span>
+                                        <span className="text-[10px] font-black uppercase opacity-40">Top Topics</span>
                                         <div className="mt-3 space-y-2">
-                                            {Object.entries(groupedLogs).slice(0, 3).map(([t, l]) => (
+                                            {Object.entries(groupedLogs).slice(0, 4).map(([t, l]) => (
                                                 <div key={t} className="flex justify-between items-center text-xs font-bold"><span className="opacity-60 truncate mr-2">{t}</span><span className="text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full text-[10px]">{l.length}</span></div>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="space-y-4">
+                                    <input type="text" placeholder="Search title, topic, code, or date..." className="search-input text-slate-900 dark:text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                        <div className="flex gap-2">
+                                            {['Easy', 'Medium', 'Hard'].map(diff => (
+                                                <div key={diff} onClick={() => setDiffFilter(p => ({ ...p, [diff]: !p[diff] }))} className={`filter-chip chip-${diff.toLowerCase()} ${diffFilter[diff] ? 'active' : 'opacity-40'}`}>
+                                                    {diff} ({diffCounts[diff]})
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button onClick={() => { setSearchTerm(""); setDiffFilter({ Easy: true, Medium: true, Hard: true }); }} className="text-[10px] font-black uppercase text-blue-500 hover:underline">Reset Filters</button>
+                                    </div>
+                                </div>
+
                                 {Object.entries(groupedLogs).map(([topic, logs]) => (
                                     <div key={topic}>
-                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center"><span className="text-base md:text-lg font-black">{topic}</span><span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span></div>
+                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center"><span className="text-base md:text-lg font-black">{highlightText(topic, searchTerm)}</span><span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span></div>
                                         {expandedTopic === topic && logs.map(log => (
                                             <div key={log.id} className="question-item">
-                                                <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group pr-4 pr-4"><h4 className="font-bold group-hover:text-blue-500 text-base">{log.title}</h4><div className="flex gap-4 items-center"><span className="text-[10px] font-bold opacity-30">{log.date}</span><button onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) { const fd = { ...data, logs: data.logs.filter(l => l.id !== log.id) }; setData(fd); fetch(API_URL, { method: "PUT", headers: { Authorization: `token ${token}` }, body: JSON.stringify({ message: "Del", content: btoa(unescape(encodeURIComponent(JSON.stringify(fd, null, 2)))), sha: log.sha }) }) } }} className="text-red-500 opacity-40 hover:opacity-100">✕</button></div></div>
+                                                <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group pr-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="diff-dot" style={{ backgroundColor: diffColors[log.difficulty || 'Medium'] }}></div>
+                                                        <h4 className="font-bold group-hover:text-blue-500 text-base">{highlightText(log.title, searchTerm)}</h4>
+                                                    </div>
+                                                    <div className="flex gap-4 items-center">
+                                                        <span className="text-[10px] font-bold opacity-30">{highlightText(log.date, searchTerm)}</span>
+                                                        <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) { const fd = { ...data, logs: data.logs.filter(l => l.id !== log.id) }; setData(fd); fetch(API_URL, { method: "PUT", headers: { Authorization: `token ${token}` }, body: JSON.stringify({ message: "Del", content: btoa(unescape(encodeURIComponent(JSON.stringify(fd, null, 2)))), sha: log.sha }) }) } }} className="text-red-500 opacity-40 hover:opacity-100 ✕">✕</button>
+                                                    </div>
+                                                </div>
                                                 {expandedQuestion === log.id && (
                                                     <div className="mt-4 p-4 md:p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">
                                                         <div className="markdown-body text-xs md:text-sm leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: marked.parse(log.logic || "") }}></div>
-                                                        {log.code && (<div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden max-w-full"><div className="bg-[#161b22] px-3 md:px-4 py-2 border-b border-[#30363d] flex justify-between items-center"><span className="text-[8px] md:text-[10px] font-bold opacity-40 uppercase">Code</span><button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[8px] md:text-[10px] font-bold text-blue-400 uppercase">Copy</button></div><pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre></div>)}
+                                                        {log.code && (<div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden max-w-full mt-6"><div className="bg-[#161b22] px-3 md:px-4 py-2 border-b border-[#30363d] flex justify-between items-center"><span className="text-[8px] md:text-[10px] font-bold opacity-40 uppercase">Code</span><button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[8px] md:text-[10px] font-bold text-blue-400 uppercase">Copy</button></div><pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre></div>)}
                                                     </div>
                                                 )}
                                             </div>

@@ -21,285 +21,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <style>
-        :root {
-            --bg: #fdfdfd;
-            --card: #ffffff;
-            --text: #0f172a;
-            --border: #e2e8f0;
-            --primary: #2563eb;
-            --ink: #0f172a;
-        }
+        :root { --bg: #fdfdfd; --card: #ffffff; --text: #0f172a; --border: #e2e8f0; --primary: #2563eb; --ink: #0f172a; }
+        [data-theme='dark'] { --bg: #030712; --card: #0f172a; --text: #f8fafc; --border: #1e293b; --primary: #3b82f6; --ink: #ffffff; }
 
-        [data-theme='dark'] {
-            --bg: #030712;
-            --card: #0f172a;
-            --text: #f8fafc;
-            --border: #1e293b;
-            --primary: #3b82f6;
-            --ink: #ffffff;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text); transition: background-color 0.4s ease; overflow-x: hidden; width: 100%; }
+        .glass-nav { background: rgba(var(--bg), 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; transition: all 0.3s ease; min-height: 280px; display: flex; flex-direction: column; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2); }
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            transition: background-color 0.4s ease;
-            overflow-x: hidden;
-            width: 100%;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--border); }
+        .calendar-day-header { background: var(--card); font-size: 10px; font-weight: 800; text-align: center; padding: 4px 0; opacity: 0.5; }
+        .calendar-day { background: var(--card); aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+        .day-active { background: var(--primary) !important; color: white !important; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .day-active:hover { filter: brightness(1.2); transform: scale(1.1); z-index: 10; }
 
-        .glass-nav {
-            background: rgba(var(--bg), 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
+        .markdown-body { line-height: 1.8 !important; font-size: 1rem !important; color: inherit !important; background: transparent !important; }
+        .markdown-body h1 { font-size: 2rem !important; font-weight: 800 !important; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; color: var(--primary) !important; }
+        .markdown-body h2 { font-size: 1.6rem !important; font-weight: 700 !important; color: var(--text) !important; }
+        .markdown-body h3 { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--primary) !important; }
+        .markdown-body ul { list-style-type: disc !important; padding-left: 1.8rem !important; margin-bottom: 1.2rem !important; }
+        .markdown-body li { display: list-item !important; margin-bottom: 0.5rem; color: inherit !important; }
+        .markdown-body code:not([class*="language-"]) { background: rgba(120, 120, 120, 0.15); padding: 3px 6px; border-radius: 6px; font-family: monospace; font-weight: 600; color: #ef4444; }
 
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            min-height: 280px;
-            display: flex;
-            flex-direction: column;
-        }
+        .workspace-container { display: flex; flex-direction: column; min-height: 500px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--card); }
+        @media (min-width: 1024px) { .workspace-container { flex-direction: row; height: 550px; } }
+        .editor-pane { flex: 1; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; }
+        @media (min-width: 1024px) { .editor-pane { border-bottom: none; border-right: 1px solid var(--border); } }
+        .preview-pane { flex: 1; padding: 24px; overflow-y: auto; background: transparent !important; height: 100%; }
+        .editor-area { flex: 1; width: 100%; padding: 16px; border: none; outline: none; background: transparent; font-family: 'Consolas', monospace; font-size: 16px; line-height: 1.7; resize: none; color: var(--ink); }
+        .toolbar-btn { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; background: var(--bg); border: 1px solid var(--border); cursor: pointer; }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
-        }
+        .search-input { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; width: 100%; outline: none; transition: 0.3s; font-weight: 600; }
+        .filter-chip { padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; border: 1px solid var(--border); text-transform: uppercase; }
+        .chip-easy.active { background: #22c55e !important; color: white !important; border-color: #22c55e !important; }
+        .chip-medium.active { background: #f97316 !important; color: white !important; border-color: #f97316 !important; }
+        .chip-hard.active { background: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+        .diff-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            margin-top: 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--border);
-        }
-
-        .calendar-day-header {
-            background: var(--card);
-            font-size: 10px;
-            font-weight: 800;
-            text-align: center;
-            padding: 4px 0;
-            opacity: 0.5;
-        }
-
-        .calendar-day {
-            background: var(--card);
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .day-active {
-            background: var(--primary) !important;
-            color: white !important;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .day-active:hover {
-            filter: brightness(1.2);
-            transform: scale(1.1);
-            z-index: 10;
-        }
-
-        .markdown-body {
-            line-height: 1.8 !important;
-            font-size: 1rem !important;
-            color: inherit !important;
-            background: transparent !important;
-        }
-
-        .markdown-body h1 {
-            font-size: 2rem !important;
-            font-weight: 800 !important;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 0.5rem;
-            color: var(--primary) !important;
-        }
-
-        .markdown-body h2 {
-            font-size: 1.6rem !important;
-            font-weight: 700 !important;
-            color: var(--text) !important;
-        }
-
-        .markdown-body h3 {
-            font-size: 1.3rem !important;
-            font-weight: 700 !important;
-            color: var(--primary) !important;
-        }
-
-        .markdown-body ul {
-            list-style-type: disc !important;
-            padding-left: 1.8rem !important;
-            margin-bottom: 1.2rem !important;
-        }
-
-        .markdown-body li {
-            display: list-item !important;
-            margin-bottom: 0.5rem;
-            color: inherit !important;
-        }
-
-        .markdown-body code:not([class*="language-"]) {
-            background: rgba(120, 120, 120, 0.15);
-            padding: 3px 6px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-weight: 600;
-            color: #ef4444;
-        }
-
-        .workspace-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 500px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
-            background: var(--card);
-        }
-
-        @media (min-width: 1024px) {
-            .workspace-container {
-                flex-direction: row;
-                height: 550px;
-            }
-        }
-
-        .editor-pane {
-            flex: 1;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (min-width: 1024px) {
-            .editor-pane {
-                border-bottom: none;
-                border-right: 1px solid var(--border);
-            }
-        }
-
-        .preview-pane {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-            background: transparent !important;
-            height: 100%;
-        }
-
-        .editor-area {
-            flex: 1;
-            width: 100%;
-            padding: 16px;
-            border: none;
-            outline: none;
-            background: transparent;
-            font-family: 'Consolas', monospace;
-            font-size: 16px;
-            line-height: 1.7;
-            resize: none;
-            color: var(--ink);
-        }
-
-        .toolbar-btn {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 800;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            cursor: pointer;
-        }
-
-        .search-input {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px 20px;
-            width: 100%;
-            outline: none;
-            transition: 0.3s;
-            font-weight: 600;
-        }
-
-        .filter-chip {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid var(--border);
-            text-transform: uppercase;
-        }
-
-        .chip-easy.active {
-            background: #22c55e !important;
-            color: white !important;
-            border-color: #22c55e !important;
-        }
-
-        .chip-medium.active {
-            background: #f97316 !important;
-            color: white !important;
-            border-color: #f97316 !important;
-        }
-
-        .chip-hard.active {
-            background: #ef4444 !important;
-            color: white !important;
-            border-color: #ef4444 !important;
-        }
-
-        .diff-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        @keyframes pulsate {
-            0% {
-                background-color: rgba(254, 240, 138, 0.8);
-            }
-
-            50% {
-                background-color: rgba(250, 204, 21, 1);
-            }
-
-            100% {
-                background-color: rgba(254, 240, 138, 0.8);
-            }
-        }
-
-        .highlight {
-            animation: pulsate 2s infinite ease-in-out;
-            color: #1e293b;
-            border-radius: 4px;
-            padding: 0 4px;
-            font-weight: 700;
-            box-shadow: 0 0 5px rgba(250, 204, 21, 0.5);
-        }
-
-        [data-theme='dark'] .highlight {
-            color: #ffffff;
-            box-shadow: 0 0 8px rgba(133, 77, 14, 0.8);
-        }
+        @keyframes pulsate { 0% { background-color: rgba(254, 240, 138, 0.8); } 50% { background-color: rgba(250, 204, 21, 1); } 100% { background-color: rgba(254, 240, 138, 0.8); } }
+        .highlight { animation: pulsate 2s infinite ease-in-out; color: #1e293b; border-radius: 4px; padding: 0 4px; font-weight: 700; box-shadow: 0 0 5px rgba(250, 204, 21, 0.5); }
+        [data-theme='dark'] .highlight { color: #ffffff; box-shadow: 0 0 8px rgba(133, 77, 14, 0.8); }
     </style>
 </head>
 
@@ -323,7 +84,7 @@
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
             const [viewDate, setViewDate] = useState(new Date());
             const [lastSync, setLastSync] = useState("");
-
+            
             const [searchTerm, setSearchTerm] = useState("");
             const [diffFilter, setDiffFilter] = useState({ Easy: true, Medium: true, Hard: true });
 
@@ -332,6 +93,12 @@
             const editorRef = useRef(null);
 
             const diffColors = { Easy: "#22c55e", Medium: "#f97316", Hard: "#ef4444" };
+
+            // TOPIC SANITIZER: Automatically cleans up spaces and hyphens to merge duplicates
+            const sanitizeTopic = (t) => {
+                if (!t) return "General";
+                return t.replace(/\s*-\s*/, " - ").trim();
+            };
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
@@ -370,7 +137,7 @@
                 for (let i = 0; i < firstDay; i++) days.push({ day: null });
                 for (let i = 1; i <= daysInMonth; i++) {
                     const currentISO = new Date(year, month, i + 1).toISOString().split('T')[0];
-                    const rawDateLabel = new Date(year, month, i).toLocaleDateString('en-GB'); // Format matching your data
+                    const rawDateLabel = new Date(year, month, i).toLocaleDateString('en-GB');
                     days.push({ day: i, active: activeDates.has(currentISO), raw: rawDateLabel });
                 }
                 return { days, monthName: viewDate.toLocaleString('default', { month: 'short', year: '2-digit' }) };
@@ -380,7 +147,7 @@
                 if (!term.trim()) return text;
                 const regex = new RegExp(`(${term})`, 'gi');
                 const parts = text.split(regex);
-                return parts.map((part, i) =>
+                return parts.map((part, i) => 
                     regex.test(part) ? <span key={i} className="highlight">{part}</span> : part
                 );
             };
@@ -388,18 +155,19 @@
             const filteredArray = useMemo(() => {
                 const term = searchTerm.toLowerCase();
                 return data.logs.filter(log => {
-                    const matchText = log.title.toLowerCase().includes(term) ||
-                        (log.topic || "").toLowerCase().includes(term) ||
-                        (log.code || "").toLowerCase().includes(term) ||
-                        (log.date || "").toLowerCase().includes(term);
+                    const matchText = log.title.toLowerCase().includes(term) || 
+                                     sanitizeTopic(log.topic).toLowerCase().includes(term) || 
+                                     (log.code || "").toLowerCase().includes(term) ||
+                                     (log.date || "").toLowerCase().includes(term);
                     return matchText && diffFilter[log.difficulty || "Medium"];
                 });
             }, [data.logs, searchTerm, diffFilter]);
 
+            // Grouping logic with SANITIZATION to merge duplicate topics
             const groupedLogs = useMemo(() => {
                 const sorted = [...filteredArray].sort((a, b) => new Date(b.date) - new Date(a.date));
                 return sorted.reduce((acc, log) => {
-                    const t = log.topic || "General";
+                    const t = sanitizeTopic(log.topic);
                     if (!acc[t]) acc[t] = [];
                     acc[t].push(log);
                     return acc;
@@ -408,8 +176,8 @@
 
             const diffCounts = useMemo(() => {
                 const term = searchTerm.toLowerCase();
-                return data.logs.filter(l =>
-                    l.title.toLowerCase().includes(term) || (l.topic || "").toLowerCase().includes(term) || (l.code || "").toLowerCase().includes(term) || (l.date || "").toLowerCase().includes(term)
+                return data.logs.filter(l => 
+                    l.title.toLowerCase().includes(term) || sanitizeTopic(l.topic).toLowerCase().includes(term) || (l.code || "").toLowerCase().includes(term)
                 ).reduce((acc, log) => {
                     const d = log.difficulty || "Medium";
                     acc[d]++;
@@ -444,7 +212,7 @@
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
                             <div>
-                                <h1 className="text-xl font-extrabold tracking-tighter leading-none uppercase">DSA Tracker</h1>
+                                <h1 className="text-xl font-extrabold tracking-tighter leading-none">DSA TRACKER</h1>
                                 {lastSync && <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Last Sync: {lastSync}</p>}
                             </div>
                         </div>
@@ -464,7 +232,7 @@
                         {isEditing ? (
                             <div className="space-y-4">
                                 <div className="stat-card !min-h-0 space-y-4">
-                                    <input type="password" placeholder="GitHub Token" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={token} onChange={e => setToken(e.target.value)} />
+                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={token} onChange={e => setToken(e.target.value)} />
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <input type="date" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
                                         <input type="text" placeholder="Topic" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
@@ -505,11 +273,10 @@
                                         <div className="calendar-grid">
                                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="calendar-day-header">{d}</div>)}
                                             {calendarData.days.map((d, i) => (
-                                                <div
-                                                    key={i}
+                                                <div 
+                                                    key={i} 
                                                     onClick={() => d.active && setSearchTerm(d.raw)}
                                                     className={`calendar-day ${d.active ? 'day-active' : ''}`}
-                                                    title={d.active ? `Show questions from ${d.raw}` : ""}
                                                 >
                                                     {d.day}
                                                 </div>
@@ -536,27 +303,30 @@
                                 </div>
 
                                 <div className="space-y-4">
-                                    <input type="text" placeholder="Search title, topic, code, or date..." className="search-input text-slate-900 dark:text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                    <input type="text" placeholder="Search title, topic, or code..." className="search-input text-slate-900 dark:text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                                     <div className="flex flex-wrap items-center justify-between gap-4">
                                         <div className="flex gap-2">
                                             {['Easy', 'Medium', 'Hard'].map(diff => (
-                                                <div key={diff} onClick={() => setDiffFilter(p => ({ ...p, [diff]: !p[diff] }))} className={`filter-chip chip-${diff.toLowerCase()} ${diffFilter[diff] ? 'active' : 'opacity-40'}`}>
+                                                <div key={diff} onClick={() => setDiffFilter(p => ({...p, [diff]: !p[diff]}))} className={`filter-chip chip-${diff.toLowerCase()} ${diffFilter[diff] ? 'active' : 'opacity-40'}`}>
                                                     {diff} ({diffCounts[diff]})
                                                 </div>
                                             ))}
                                         </div>
-                                        <button onClick={() => { setSearchTerm(""); setDiffFilter({ Easy: true, Medium: true, Hard: true }); }} className="text-[10px] font-black uppercase text-blue-500 hover:underline">Reset Filters</button>
+                                        <button onClick={() => { setSearchTerm(""); setDiffFilter({Easy:true, Medium:true, Hard:true}); }} className="text-[10px] font-black uppercase text-blue-500 hover:underline">Reset Filters</button>
                                     </div>
                                 </div>
 
                                 {Object.entries(groupedLogs).map(([topic, logs]) => (
                                     <div key={topic}>
-                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center"><span className="text-base md:text-lg font-black">{highlightText(topic, searchTerm)}</span><span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span></div>
+                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center">
+                                            <span className="text-base md:text-lg font-black">{highlightText(topic, searchTerm)}</span>
+                                            <span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span>
+                                        </div>
                                         {expandedTopic === topic && logs.map(log => (
                                             <div key={log.id} className="question-item">
                                                 <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group pr-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="diff-dot" style={{ backgroundColor: diffColors[log.difficulty || 'Medium'] }}></div>
+                                                        <div className="diff-dot" style={{backgroundColor: diffColors[log.difficulty || 'Medium']}}></div>
                                                         <h4 className="font-bold group-hover:text-blue-500 text-base">{highlightText(log.title, searchTerm)}</h4>
                                                     </div>
                                                     <div className="flex gap-4 items-center">

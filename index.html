@@ -10,57 +10,398 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+    </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <style>
-        :root { --bg: #fdfdfd; --card: #ffffff; --text: #0f172a; --border: #e2e8f0; --primary: #2563eb; --ink: #0f172a; }
-        [data-theme='dark'] { --bg: #030712; --card: #0f172a; --text: #f8fafc; --border: #1e293b; --primary: #3b82f6; --ink: #ffffff; }
+        :root {
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --primary: #2563eb;
+            --ink: #0f172a;
+        }
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: var(--text); transition: background-color 0.4s ease; overflow-x: hidden; width: 100%; }
-        .glass-nav { background: rgba(var(--bg), 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
-        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; transition: all 0.3s ease; min-height: 280px; display: flex; flex-direction: column; }
-        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2); }
+        [data-theme='dark'] {
+            --bg: #030712;
+            --card: #0f172a;
+            --text: #f8fafc;
+            --border: #1e293b;
+            --primary: #3b82f6;
+            --ink: #ffffff;
+        }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--border); }
-        .calendar-day-header { background: var(--card); font-size: 10px; font-weight: 800; text-align: center; padding: 4px 0; opacity: 0.5; }
-        .calendar-day { background: var(--card); aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
-        .day-active { background: var(--primary) !important; color: white !important; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .day-active:hover { filter: brightness(1.2); transform: scale(1.1); z-index: 10; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background-color 0.4s ease;
+            overflow-x: hidden;
+            width: 100%;
+        }
 
-        .markdown-body { line-height: 1.8 !important; font-size: 1rem !important; color: inherit !important; background: transparent !important; }
-        .markdown-body h1 { font-size: 2rem !important; font-weight: 800 !important; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; color: var(--primary) !important; }
-        .markdown-body h2 { font-size: 1.6rem !important; font-weight: 700 !important; color: var(--text) !important; }
-        .markdown-body h3 { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--primary) !important; }
-        .markdown-body ul { list-style-type: disc !important; padding-left: 1.8rem !important; margin-bottom: 1.2rem !important; }
-        .markdown-body li { display: list-item !important; margin-bottom: 0.5rem; color: inherit !important; }
-        .markdown-body code:not([class*="language-"]) { background: rgba(120, 120, 120, 0.15); padding: 3px 6px; border-radius: 6px; font-family: monospace; font-weight: 600; color: #ef4444; }
 
-        .workspace-container { display: flex; flex-direction: column; min-height: 500px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--card); }
-        @media (min-width: 1024px) { .workspace-container { flex-direction: row; height: 550px; } }
-        .editor-pane { flex: 1; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; }
-        @media (min-width: 1024px) { .editor-pane { border-bottom: none; border-right: 1px solid var(--border); } }
-        .preview-pane { flex: 1; padding: 24px; overflow-y: auto; background: transparent !important; height: 100%; }
-        .editor-area { flex: 1; width: 100%; padding: 16px; border: none; outline: none; background: transparent; font-family: 'Consolas', monospace; font-size: 16px; line-height: 1.7; resize: none; color: var(--ink); }
-        .toolbar-btn { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; background: var(--bg); border: 1px solid var(--border); cursor: pointer; }
 
-        .search-input { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; width: 100%; outline: none; transition: 0.3s; font-weight: 600; }
-        .filter-chip { padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; border: 1px solid var(--border); text-transform: uppercase; }
-        .chip-easy.active { background: #22c55e !important; color: white !important; border-color: #22c55e !important; }
-        .chip-medium.active { background: #f97316 !important; color: white !important; border-color: #f97316 !important; }
-        .chip-hard.active { background: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
-        .diff-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
 
-        @keyframes pulsate { 0% { background-color: rgba(254, 240, 138, 0.8); } 50% { background-color: rgba(250, 204, 21, 1); } 100% { background-color: rgba(254, 240, 138, 0.8); } }
-        .highlight { animation: pulsate 2s infinite ease-in-out; color: #1e293b; border-radius: 4px; padding: 0 4px; font-weight: 700; box-shadow: 0 0 5px rgba(250, 204, 21, 0.5); }
-        [data-theme='dark'] .highlight { color: #ffffff; box-shadow: 0 0 8px rgba(133, 77, 14, 0.8); }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-top: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--border);
+        }
+
+        .calendar-day-header {
+            background: var(--card);
+            font-size: 10px;
+            font-weight: 800;
+            text-align: center;
+            padding: 4px 0;
+            opacity: 0.5;
+        }
+
+        .calendar-day {
+            background: var(--card);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .day-active {
+            background: var(--primary) !important;
+            color: white !important;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* --- Professional Markdown Typography --- */
+        .markdown-body {
+            font-size: 1rem;
+            line-height: 1.75;
+            color: var(--text);
+            word-wrap: break-word;
+        }
+
+        .markdown-body>*:first-child {
+            margin-top: 0 !important;
+        }
+
+        .markdown-body>*:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4,
+        .markdown-body h5,
+        .markdown-body h6 {
+            color: var(--text);
+            font-weight: 800;
+            line-height: 1.3;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+        }
+
+        .dark .markdown-body,
+        .dark .markdown-body>*:not(code):not(pre) {
+            color: #f1f5f9 !important;
+        }
+
+        .dark .markdown-body h1,
+        .dark .markdown-body h2 {
+            color: #60a5fa !important;
+        }
+
+        .dark .markdown-body code {
+            color: #e2e8f0;
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+
+
+        .markdown-body h1 {
+            font-size: 2.25em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.3em;
+            color: var(--primary);
+        }
+
+        .markdown-body h2 {
+            font-size: 1.75em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.3em;
+            color: var(--primary);
+        }
+
+        .markdown-body h3 {
+            font-size: 1.5em;
+        }
+
+        .markdown-body h4 {
+            font-size: 1.25em;
+        }
+
+        .markdown-body p {
+            margin-bottom: 1.25em;
+            margin-top: 0;
+        }
+
+        .markdown-body a {
+            color: var(--primary);
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: none;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            margin-top: 0;
+            margin-bottom: 1.25em;
+            padding-left: 1.625em;
+        }
+
+        .markdown-body ul {
+            list-style-type: disc;
+        }
+
+        .markdown-body ol {
+            list-style-type: decimal;
+        }
+
+        .markdown-body li {
+            margin-bottom: 0.375em;
+        }
+
+        .markdown-body li>p {
+            margin-top: 0.75em;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-body li>ul,
+        .markdown-body li>ol {
+            margin-top: 0.75em;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 1em;
+            color: inherit;
+            opacity: 0.8;
+            font-style: italic;
+            margin-bottom: 1.5em;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .markdown-body hr {
+            height: 0.2em;
+            width: 100%;
+            padding: 0;
+            margin: 24px 0;
+            background-color: var(--border);
+            border: 0;
+        }
+
+        .markdown-body code {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875em;
+            background-color: rgba(125, 125, 125, 0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+        }
+
+        .markdown-body pre {
+            background-color: #1e1e1e;
+            padding: 1em;
+            overflow: auto;
+            border-radius: 12px;
+            margin-bottom: 1.5em;
+            border: 1px solid var(--border);
+        }
+
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #d4d4d4;
+            font-size: 0.9em;
+        }
+
+        .markdown-body table {
+            display: block;
+            width: 100%;
+            overflow: auto;
+            margin-bottom: 1.5em;
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+
+        .markdown-body table tr {
+            background-color: transparent;
+            border-top: 1px solid var(--border);
+        }
+
+        .markdown-body table tr:nth-child(2n) {
+            background-color: rgba(125, 125, 125, 0.05);
+        }
+
+        .markdown-body table th,
+        .markdown-body table td {
+            padding: 6px 13px;
+            border: 1px solid var(--border);
+        }
+
+        .markdown-body table th {
+            font-weight: 600;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+            box-sizing: content-box;
+            background-color: transparent;
+            border-radius: 8px;
+            margin-bottom: 1.5em;
+        }
+
+        .workspace-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--card);
+        }
+
+        @media (min-width: 1024px) {
+            .workspace-container {
+                flex-direction: row;
+                height: 550px;
+            }
+        }
+
+        .editor-area {
+            flex: 1;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: 'Consolas', monospace;
+            font-size: 16px;
+            line-height: 1.7;
+            resize: none;
+            color: var(--ink);
+        }
+
+        .toolbar-btn {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .search-input {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 20px;
+            width: 100%;
+            outline: none;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .filter-chip {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        .chip-easy.active {
+            background: #22c55e !important;
+            color: white !important;
+        }
+
+        .chip-medium.active {
+            background: #f97316 !important;
+            color: white !important;
+        }
+
+        .chip-hard.active {
+            background: #ef4444 !important;
+            color: white !important;
+        }
+
+        /* Markdown Spacing Fix */
+        .markdown-body {
+            line-height: 1.5 !important;
+        }
+
+        .markdown-body p {
+            margin-bottom: 0.75em !important;
+        }
+
+        .markdown-body ul,
+        .markdown-body ol {
+            margin-bottom: 0.75em !important;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4 {
+            margin-top: 1em !important;
+            margin-bottom: 0.5em !important;
+            line-height: 1.3 !important;
+        }
     </style>
 </head>
 
@@ -68,289 +409,780 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useMemo, useRef, Component } = React;
+
+        // Error Boundary Class
+        class ErrorBoundary extends Component {
+            constructor(props) { super(props); this.state = { hasError: false }; }
+            static getDerivedStateFromError(error) { return { hasError: true }; }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-slate-950">
+                            <h1 className="text-4xl font-black mb-4">Something went wrong.</h1>
+                            <p className="opacity-60 mb-8">This usually happens if your GitHub data.json has a syntax error.</p>
+                            <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold">Refresh Page</button>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
 
         const USER = "Subasish09";
         const REPO = "dsa-tracker";
         const RAW_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json`;
         const API_URL = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
 
+        // --- Components ---
+
+        const Editor = ({ language, value, theme, onChange }) => {
+            const divEl = useRef(null);
+            const editor = useRef(null);
+            useEffect(() => {
+                if (divEl.current) {
+                    // Initialize Monaco
+                    window.require(['vs/editor/editor.main'], () => {
+                        if (!editor.current) {
+                            editor.current = window.monaco.editor.create(divEl.current, {
+                                value: value,
+                                language: language,
+                                theme: theme === 'dark' ? 'vs-dark' : 'vs',
+                                automaticLayout: true,
+                                minimap: { enabled: false },
+                                fontSize: 14,
+                                fontFamily: "'Consolas', 'Monaco', monospace",
+                                scrollBeyondLastLine: false,
+                                padding: { top: 16, bottom: 16 }
+                            });
+                            editor.current.onDidChangeModelContent(() => {
+                                onChange(editor.current.getValue());
+                            });
+                        }
+                    });
+                }
+                return () => { if (editor.current) editor.current.dispose(); };
+            }, []); // Init once
+
+            // Update Theme
+            useEffect(() => {
+                if (window.monaco && editor.current) window.monaco.editor.setTheme(theme === 'dark' ? 'vs-dark' : 'vs');
+            }, [theme]);
+
+            // Update Language
+            useEffect(() => {
+                if (window.monaco && editor.current) {
+                    const model = editor.current.getModel();
+                    window.monaco.editor.setModelLanguage(model, language);
+                }
+            }, [language]);
+
+            return <div ref={divEl} className="w-full h-full" />;
+        };
+
+        const NavBar = ({ view, setView, theme, setTheme, lastSync }) => (
+            <nav className="sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#020617] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 text-slate-900 dark:text-white">
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white shadow-xl ring-4 ring-blue-100 dark:ring-blue-900/20 text-xl tracking-tighter">C2</div>
+                        <div>
+                            <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
+                            <p className="text-[9px] font-bold opacity-60 dark:opacity-70 uppercase tracking-widest">Last Sync: {lastSync}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <button onClick={() => setView("dashboard")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'dashboard' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>Home</button>
+                    <button onClick={() => setView("practice")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'practice' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>IDE</button>
+                    <button onClick={() => setView("practice_logs")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'practice_logs' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>History</button>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => {
+                        const blob = new Blob([localStorage.getItem('dsa-tracker-data') || JSON.stringify({ logs: [], history: [], practice: [] })], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `dsa-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+                        a.click();
+                    }} className="flex items-center gap-2 px-3 py-2 opacity-60 hover:opacity-100 transition-all border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs" title="Export Data">
+                        <span className="text-sm">💾</span> <span className="hidden md:inline">Export</span>
+                    </button>
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 opacity-80 hover:opacity-100 transition-opacity">{theme === 'light' ? '🌙' : '☀️'}</button>
+                    {view === 'dashboard' && <button onClick={() => setView("editing")} className="bg-slate-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold text-xs shadow-lg transform hover:scale-105 transition-transform">+ Log</button>}
+                </div>
+            </nav>
+        );
+
+        const StatCard = ({ children, className = "", style = {} }) => (
+            <div className={`stat-card ${className}`} style={style}>
+                {children}
+            </div>
+        );
+
+        const Calendar = ({ calendarData, setSearchTerm, onPrev, onNext }) => (
+            <div className="stat-card border-l-4 border-l-orange-500">
+                <div className="flex justify-between items-center mb-1 dark:text-white">
+                    <span className="text-[10px] font-black opacity-40 uppercase">Persistence</span>
+                    <div className="flex items-center gap-2">
+                        <button onClick={onPrev} className="hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded transition-colors text-xs">◀</button>
+                        <span className="text-[10px] font-bold text-orange-500 min-w-[60px] text-center">{calendarData.monthName}</span>
+                        <button onClick={onNext} className="hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded transition-colors text-xs">▶</button>
+                    </div>
+                </div>
+                <div className="calendar-grid">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="calendar-day-header">{d}</div>)}
+                    {calendarData.days.map((d, i) => <div key={i} onClick={() => d.active && setSearchTerm(d.raw)} className={`calendar-day ${d.active ? 'day-active' : ''}`}>{d.day}</div>)}
+                </div>
+            </div>
+        );
+
+        const LogEntry = ({ log, diffColors, expanded, onToggle, onDelete }) => (
+            <div className="stat-card !min-h-0 cursor-pointer p-6 dark:text-white" onClick={onToggle}>
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div className="diff-dot" style={{ backgroundColor: diffColors[log.difficulty || 'Medium'], width: 8, height: 8, borderRadius: '50%' }}></div>
+                        <span className="font-bold">{log.title}</span>
+                        {log.type === 'practice' && <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">IDE</span>}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="text-[10px] opacity-40">{log.date}</span>
+                        {onDelete && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDelete(log.id); }}
+                                className="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition-colors"
+                                title="Delete Log"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                            </button>
+                        )}
+                    </div>
+                </div>
+                {expanded && (
+                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-4">
+                        {log.logic ? (
+                            <div className="markdown-body" dangerouslySetInnerHTML={{ __html: marked.parse(log.logic) }}></div>
+                        ) : (
+                            <div className="text-xs opacity-50 italic">No notes recorded for this session.</div>
+                        )}
+                        <div className="relative group/code">
+                            <button
+                                onClick={() => { navigator.clipboard.writeText(log.code); alert('Code copied!'); }}
+                                className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg opacity-0 group-hover/code:opacity-100 transition-opacity text-[10px] font-bold z-10"
+                            >
+                                COPY
+                            </button>
+                            <pre className="p-4 bg-[#0d1117] rounded-xl text-xs text-white overflow-x-auto"><code>{log.code}</code></pre>
+                        </div>
+                        {log.timer && <div className="text-[10px] font-mono opacity-50 text-right">Time Taken: {Math.floor(log.timer / 60)}m {log.timer % 60}s</div>}
+                    </div>
+                )}
+            </div>
+        );
+
+        // --- Main App ---
+
         function App() {
-            const [data, setData] = useState({ logs: [], history: [] });
-            const [isEditing, setIsEditing] = useState(false);
-            const [expandedTopic, setExpandedTopic] = useState(null);
-            const [expandedQuestion, setExpandedQuestion] = useState(null);
+            const [data, setData] = useState({ logs: [], history: [], practice: [] });
+            const [loading, setLoading] = useState(true);
+            const [view, setView] = useState("dashboard");
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
             const [token, setToken] = useState(localStorage.getItem('gh_token') || "");
             const [viewDate, setViewDate] = useState(new Date());
-            const [lastSync, setLastSync] = useState("");
-            
+            const [lastSync, setLastSync] = useState("Syncing...");
             const [searchTerm, setSearchTerm] = useState("");
             const [diffFilter, setDiffFilter] = useState({ Easy: true, Medium: true, Hard: true });
+            const [expandedQuestion, setExpandedQuestion] = useState(null);
 
-            const getToday = () => new Date().toISOString().split('T')[0];
-            const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: getToday() });
-            const editorRef = useRef(null);
+            // New State for Enhancements
+            const [sortBy, setSortBy] = useState("Newest");
+            const [page, setPage] = useState(1);
+            const ITEMS_PER_PAGE = 10;
 
+            const [practiceEntry, setPracticeEntry] = useState({ title: "", topic: "", code: "", language: "cpp" });
+            const [output, setOutput] = useState("");
+            const [isCompiling, setIsCompiling] = useState(false);
+            const [timer, setTimer] = useState(0);
+            const [isTimerRunning, setIsTimerRunning] = useState(false);
+            const timerRef = useRef(null);
+
+            const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: new Date().toISOString().split('T')[0] });
+
+            const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
             const diffColors = { Easy: "#22c55e", Medium: "#f97316", Hard: "#ef4444" };
+            const sanitizeTopic = (t) => t ? t.replace(/\s*-\s*/, " - ").trim() : "General";
 
-            // TOPIC SANITIZER: Automatically cleans up spaces and hyphens to merge duplicates
-            const sanitizeTopic = (t) => {
-                if (!t) return "General";
-                return t.replace(/\s*-\s*/, " - ").trim();
+            // Helper to parse DD/MM/YYYY
+            const parseDate = (str) => {
+                if (!str) return new Date(0);
+                const parts = str.split('/');
+                if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+                return new Date(str); // Fallback
             };
+
+            // Reset page when filters change
+            useEffect(() => { setPage(1); }, [searchTerm, diffFilter, sortBy]);
 
             useEffect(() => {
                 document.documentElement.setAttribute('data-theme', theme);
+                if (theme === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
                 localStorage.setItem('theme', theme);
             }, [theme]);
 
-            const fetchData = () => {
+            useEffect(() => {
                 fetch(RAW_URL + "?v=" + Date.now())
-                    .then(res => res.json())
-                    .then(resData => {
-                        setData(resData.logs ? resData : { logs: resData, history: [] });
-                        const now = new Date();
-                        setLastSync(now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ", " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                    .then(res => {
+                        if (!res.ok) throw new Error("Failed to fetch");
+                        return res.json();
                     })
-                    .catch(() => setData({ logs: [], history: [] }));
-            };
+                    .then(resData => {
+                        setData({ logs: resData.logs || [], history: resData.history || [], practice: resData.practice || [] });
+                        setLastSync(new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
+                        setLoading(false);
+                    }).catch(() => {
+                        setData({ logs: [], history: [], practice: [] });
+                        setLastSync("Offline / Error");
+                        setLoading(false);
+                    });
+            }, []);
 
-            useEffect(() => fetchData(), []);
+            useEffect(() => {
+                if (isTimerRunning) timerRef.current = setInterval(() => setTimer(p => p + 1), 1000);
+                else clearInterval(timerRef.current);
+                return () => clearInterval(timerRef.current);
+            }, [isTimerRunning]);
 
-            const getISOKey = (dateStr) => {
-                if (!dateStr) return null;
-                const d = new Date(dateStr.includes('/') ? dateStr.split('/').reverse().join('-') : dateStr);
-                return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
-            };
+            useEffect(() => { if (typeof Prism !== 'undefined') Prism.highlightAll(); }, [view, practiceEntry.code, expandedQuestion, entry.code]);
 
             const calendarData = useMemo(() => {
-                const year = viewDate.getFullYear();
-                const month = viewDate.getMonth();
-                const firstDay = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const year = viewDate.getFullYear(), month = viewDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
                 const days = [];
-                const activeDates = new Set([
-                    ...(data.history || []).map(d => getISOKey(d)),
-                    ...data.logs.map(l => getISOKey(l.date))
-                ]);
+                const activeDates = new Set([...data.history, ...data.logs.map(l => l.date)]);
                 for (let i = 0; i < firstDay; i++) days.push({ day: null });
                 for (let i = 1; i <= daysInMonth; i++) {
-                    const currentISO = new Date(year, month, i + 1).toISOString().split('T')[0];
-                    const rawDateLabel = new Date(year, month, i).toLocaleDateString('en-GB');
-                    days.push({ day: i, active: activeDates.has(currentISO), raw: rawDateLabel });
+                    const raw = new Date(year, month, i).toLocaleDateString('en-GB');
+                    days.push({ day: i, active: activeDates.has(raw), raw });
                 }
                 return { days, monthName: viewDate.toLocaleString('default', { month: 'short', year: '2-digit' }) };
-            }, [data.history, data.logs, viewDate]);
+            }, [data, viewDate]);
 
-            const highlightText = (text, term) => {
-                if (!term.trim()) return text;
-                const regex = new RegExp(`(${term})`, 'gi');
-                const parts = text.split(regex);
-                return parts.map((part, i) => 
-                    regex.test(part) ? <span key={i} className="highlight">{part}</span> : part
-                );
-            };
+            // Compute Difficulty Counts
+            const diffCounts = useMemo(() => {
+                const counts = { Easy: 0, Medium: 0, Hard: 0 };
+                data.logs.forEach(l => { counts[l.difficulty || 'Medium']++ });
+                // Practice sessions count as Medium by default
+                counts.Medium += data.practice.length;
+                return counts;
+            }, [data]);
 
-            const filteredArray = useMemo(() => {
+            const filteredLogs = useMemo(() => {
                 const term = searchTerm.toLowerCase();
-                return data.logs.filter(log => {
-                    const matchText = log.title.toLowerCase().includes(term) || 
-                                     sanitizeTopic(log.topic).toLowerCase().includes(term) || 
-                                     (log.code || "").toLowerCase().includes(term) ||
-                                     (log.date || "").toLowerCase().includes(term);
-                    return matchText && diffFilter[log.difficulty || "Medium"];
-                });
-            }, [data.logs, searchTerm, diffFilter]);
 
-            // Grouping logic with SANITIZATION to merge duplicate topics
+                const logs = data.logs.map(l => ({ ...l, type: 'log' }));
+                const practice = data.practice.map(p => ({
+                    ...p,
+                    type: 'practice',
+                    difficulty: 'Medium',
+                    topic: p.topic || 'Practice Session'
+                }));
+                const allItems = [...logs, ...practice];
+
+                const filtered = allItems.filter(log => {
+                    const matchesSearch =
+                        log.title.toLowerCase().includes(term) ||
+                        log.date.includes(term) ||
+                        sanitizeTopic(log.topic).toLowerCase().includes(term) ||
+                        (log.code || "").toLowerCase().includes(term);
+                    const matchesDiff = diffFilter[log.difficulty || "Medium"];
+                    return matchesSearch && matchesDiff;
+                });
+
+                return filtered.sort((a, b) => {
+                    if (sortBy === "Newest") return parseDate(b.date) - parseDate(a.date);
+                    if (sortBy === "Oldest") return parseDate(a.date) - parseDate(b.date);
+                    if (sortBy === "Difficulty") {
+                        const weights = { Easy: 1, Medium: 2, Hard: 3 };
+                        return weights[a.difficulty || 'Medium'] - weights[b.difficulty || 'Medium'];
+                    }
+                    if (sortBy === "Topic") return (a.topic || "").localeCompare(b.topic || "");
+                    return 0;
+                });
+            }, [data.logs, data.practice, searchTerm, diffFilter, sortBy]);
+
+            const logsToDisplay = useMemo(() => {
+                return filteredLogs.slice(0, page * ITEMS_PER_PAGE);
+            }, [filteredLogs, page]);
+
             const groupedLogs = useMemo(() => {
-                const sorted = [...filteredArray].sort((a, b) => new Date(b.date) - new Date(a.date));
-                return sorted.reduce((acc, log) => {
+                return logsToDisplay.reduce((acc, log) => {
                     const t = sanitizeTopic(log.topic);
                     if (!acc[t]) acc[t] = [];
                     acc[t].push(log);
                     return acc;
                 }, {});
-            }, [filteredArray]);
+            }, [logsToDisplay]);
 
-            const diffCounts = useMemo(() => {
-                const term = searchTerm.toLowerCase();
-                return data.logs.filter(l => 
-                    l.title.toLowerCase().includes(term) || sanitizeTopic(l.topic).toLowerCase().includes(term) || (l.code || "").toLowerCase().includes(term)
-                ).reduce((acc, log) => {
-                    const d = log.difficulty || "Medium";
-                    acc[d]++;
-                    return acc;
-                }, { Easy: 0, Medium: 0, Hard: 0 });
-            }, [data.logs, searchTerm]);
+            // Chart Logic: Use ALL data, not filtered data
+            const topicStats = useMemo(() => {
+                const stats = {};
+                // Combine logs and practice for the chart
+                const allItems = [...data.logs, ...data.practice];
+                allItems.forEach(l => {
+                    const t = sanitizeTopic(l.topic);
+                    stats[t] = (stats[t] || 0) + 1;
+                });
+                const total = allItems.length;
+                if (total === 0) return [];
+                return Object.entries(stats)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([name, count]) => ({ name, count, percent: (count / total) * 100 }));
+            }, [data.logs, data.practice]);
 
-            const handleSave = async () => {
+            const handleAction = async (updatedData, msg) => {
+                if (!token) return alert("Please enter your GitHub Token!");
                 try {
-                    const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
-                    const file = await res.json();
-                    const selectedDate = new Date(entry.date).toLocaleDateString('en-GB');
-                    const finalData = {
-                        logs: [{ ...entry, id: Date.now(), date: selectedDate }, ...data.logs],
-                        history: [...new Set([...data.history, selectedDate])]
+                    // 1. Get current SHA (if exists)
+                    let sha = undefined;
+                    try {
+                        const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
+                        if (res.ok) {
+                            const file = await res.json();
+                            sha = file.sha;
+                        } else if (res.status !== 404) {
+                            throw new Error(`Read failed: ${res.statusText}`);
+                        }
+                    } catch (e) {
+                        console.warn("File check failed, assuming create mode if 404", e);
+                    }
+
+                    // 2. Put (Create or Update)
+                    const body = {
+                        message: msg,
+                        content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedData, null, 2))))
                     };
-                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(finalData, null, 2))));
-                    await fetch(API_URL, {
-                        method: "PUT", headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: `Add ${entry.title}`, content, sha: file.sha })
+                    if (sha) body.sha = sha;
+
+                    const putRes = await fetch(API_URL, {
+                        method: "PUT",
+                        headers: {
+                            Authorization: `token ${token}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(body)
                     });
-                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    setData(finalData); setIsEditing(false);
-                    const now = new Date();
-                    setLastSync(now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ", " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                } catch (e) { alert("Save failed."); }
+
+                    if (!putRes.ok) {
+                        const err = await putRes.json();
+                        throw new Error(err.message || putRes.statusText);
+                    }
+
+                    setData(updatedData);
+                    confetti({ particleCount: 150 });
+                    setView("dashboard");
+                } catch (e) {
+                    alert("Sync Error: " + e.message + "\nCheck your Token, Repo Name, or Permissions.");
+                }
             };
+
+            const runCode = async () => {
+                setIsCompiling(true);
+                setOutput("Compiling & Running...");
+                try {
+                    const res = await fetch("https://emkc.org/api/v2/piston/execute", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            language: practiceEntry.language,
+                            version: "*",
+                            files: [{ content: practiceEntry.code }]
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.run) {
+                        setOutput(data.run.output);
+                    } else {
+                        setOutput("Error: Failed to execute code.");
+                    }
+                } catch (e) {
+                    setOutput("Error: " + e.message);
+                } finally {
+                    setIsCompiling(false);
+                }
+            };
+
+            const handleDelete = async (id, type) => {
+                if (!token) { return alert("Please enter your GitHub token in the '+ Log' section first."); }
+                if (!confirm("Are you sure? This cannot be undone.")) return;
+
+                const updatedData = { ...data };
+                if (type === 'practice') {
+                    updatedData.practice = data.practice.filter(p => p.id !== id);
+                } else {
+                    updatedData.logs = data.logs.filter(l => l.id !== id);
+                }
+
+                await handleAction(updatedData, `Deleted ${type === 'practice' ? 'Practice' : 'Log'} Item`);
+            };
+
+            // Enhanced Loading State (Skeleton)
+            if (loading) return (
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8 space-y-8">
+                    <div className="h-16 bg-slate-200 dark:bg-slate-900 rounded-xl w-full animate-pulse"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[1, 2, 3].map(i => <div key={i} className="h-64 bg-slate-200 dark:bg-slate-900 rounded-2xl animate-pulse"></div>)}
+                    </div>
+                    <div className="h-12 bg-slate-200 dark:bg-slate-900 rounded-xl w-full animate-pulse"></div>
+                    <div className="space-y-4">
+                        {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-slate-200 dark:bg-slate-900 rounded-2xl animate-pulse"></div>)}
+                    </div>
+                </div>
+            );
+
+            // Time-based Greeting
+            const hour = new Date().getHours();
+            const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+
+            // Progress Ring Component
+            const ProgressRing = ({ radius, stroke, progress, color }) => {
+                const normalizedRadius = radius - stroke * 2;
+                const circumference = normalizedRadius * 2 * Math.PI;
+                const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+                return (
+                    <div className="relative flex items-center justify-center">
+                        <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
+                            <circle stroke="currentColor" fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset: circumference }} r={normalizedRadius} cx={radius} cy={radius} className="text-slate-200 dark:text-slate-800" />
+                            <circle stroke={color} fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset, transition: 'stroke-dashoffset 1s ease-in-out' }} r={normalizedRadius} cx={radius} cy={radius} strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            {children}
+                        </div>
+                    </div>
+                );
+            };
+
+            const handleViewChange = (newView) => {
+                if (newView === 'practice') setIsTimerRunning(true);
+                else setIsTimerRunning(false);
+                setView(newView);
+            };
+
+
+
+
 
             return (
                 <div className="min-h-screen pb-10 w-full overflow-x-hidden">
-                    <nav className="glass-nav sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">C</div>
-                            <div>
-                                <h1 className="text-xl font-extrabold tracking-tighter leading-none">DSA TRACKER</h1>
-                                {lastSync && <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Last Sync: {lastSync}</p>}
-                            </div>
-                        </div>
-                        <div className="flex gap-4 items-center">
-                            <button onClick={() => {
-                                const ws = XLSX.utils.json_to_sheet(filteredArray);
-                                const wb = XLSX.utils.book_new();
-                                XLSX.utils.book_append_sheet(wb, ws, "DSA");
-                                XLSX.writeFile(wb, "DSA_Report.xlsx");
-                            }} className="text-xs font-bold opacity-50 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg hover:opacity-100 transition-all">Excel Export</button>
-                            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="text-lg p-1 md:p-2">{theme === 'light' ? '🌙' : '☀️'}</button>
-                            <button onClick={() => setIsEditing(!isEditing)} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-xl">{isEditing ? "Close" : "+ Log"}</button>
-                        </div>
-                    </nav>
+                    <NavBar view={view} setView={handleViewChange} theme={theme} setTheme={setTheme} lastSync={lastSync} />
 
                     <main className="max-w-[1600px] mx-auto p-4 md:p-8">
-                        {isEditing ? (
+                        {view === "practice" ? (
                             <div className="space-y-4">
-                                <div className="stat-card !min-h-0 space-y-4">
-                                    <input type="password" placeholder="GitHub PAT Token" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl outline-none" value={token} onChange={e => setToken(e.target.value)} />
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        <input type="date" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
-                                        <input type="text" placeholder="Topic" className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
-                                        <select className="p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-var(--card) p-4 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                                    <div className="flex gap-4 w-full md:w-2/3">
+                                        <input type="text" placeholder="Question Name" className="flex-1 p-3 bg-transparent outline-none font-bold text-lg dark:text-white" value={practiceEntry.title} onChange={e => setPracticeEntry({ ...practiceEntry, title: e.target.value })} />
+                                        <input type="text" placeholder="Topic" className="w-40 p-3 bg-transparent border-l border-slate-200 dark:border-slate-800 outline-none font-bold opacity-60 dark:text-white" value={practiceEntry.topic} onChange={e => setPracticeEntry({ ...practiceEntry, topic: e.target.value })} />
                                     </div>
-                                    <input type="text" placeholder="Question Title" className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
-                                    <div className="workspace-container shadow-sm">
-                                        <div className="editor-pane">
-                                            <div className="bg-slate-100 dark:bg-slate-800 p-2 flex gap-1 border-b border-slate-200 dark:border-slate-700">
-                                                {['h1', 'bold', 'list'].map(t => <button key={t} onClick={() => {
-                                                    const area = editorRef.current;
-                                                    const start = area.selectionStart; const end = area.selectionEnd;
-                                                    const val = area.value;
-                                                    let mod = t === 'h1' ? `# ${val.substring(start, end)}` : t === 'bold' ? `**${val.substring(start, end)}**` : `\n- ${val.substring(start, end)}`;
-                                                    setEntry({ ...entry, logic: val.substring(0, start) + mod + val.substring(end) });
-                                                }} className="toolbar-btn uppercase">{t}</button>)}
-                                            </div>
-                                            <textarea ref={editorRef} className="editor-area" placeholder="Write logic..." value={entry.logic} onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
-                                        </div>
-                                        <div className="preview-pane markdown-body"><div dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Preview area*") }}></div></div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-2xl font-mono font-black text-orange-500 bg-orange-500/10 px-4 py-2 rounded-xl">{formatTime(timer)}</div>
+                                        <button onClick={() => setIsTimerRunning(!isTimerRunning)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">{isTimerRunning ? "⏸" : "▶️"}</button>
+                                        <button onClick={() => setTimer(0)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">🔄</button>
                                     </div>
-                                    <textarea className="w-full p-3 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl h-32 font-mono text-xs" placeholder="Paste Code..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
-                                    <button onClick={handleSave} className="w-full bg-blue-600 text-white py-4 font-bold rounded-xl shadow-xl text-lg">Push to GitHub</button>
                                 </div>
+                                <div className="rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 shadow-2xl bg-[#1e1e1e] flex flex-col h-[600px]">
+                                    <div className="flex bg-[#252526] text-white text-xs font-bold border-b border-black items-center justify-between pr-2">
+                                        <div className="px-4 py-2 bg-[#1e1e1e] border-t-2 border-orange-500 flex items-center gap-2">
+                                            <select
+                                                value={practiceEntry.language}
+                                                onChange={e => setPracticeEntry({ ...practiceEntry, language: e.target.value })}
+                                                className="bg-transparent outline-none text-blue-400 cursor-pointer appearance-none uppercase font-bold"
+                                            >
+                                                <option value="cpp">C++</option>
+                                                <option value="python">Python</option>
+                                                <option value="javascript">JavaScript</option>
+                                                <option value="java">Java</option>
+                                                <option value="go">Go</option>
+                                            </select>
+                                        </div>
+                                        <button
+                                            onClick={runCode}
+                                            disabled={isCompiling}
+                                            className={`px-3 py-1 bg-green-600 hover:bg-green-500 text-white rounded flex items-center gap-1 transition-all ${isCompiling ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            {isCompiling ? 'Running...' : '▶ Run'}
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+                                        <div className="flex-1 relative group bg-[#1e1e1e]">
+                                            <Editor
+                                                language={practiceEntry.language}
+                                                theme={theme}
+                                                value={practiceEntry.code}
+                                                onChange={(val) => setPracticeEntry(prev => ({ ...prev, code: val }))}
+                                            />
+                                        </div>
+                                        <div className="w-[1px] bg-black"></div>
+                                        <div className="flex-1 bg-[#1e1e1e] overflow-auto relative border-t md:border-t-0 md:border-l border-slate-700 flex flex-col">
+                                            <div className="bg-[#252526] text-[10px] font-bold text-slate-400 px-4 py-1 uppercase tracking-widest border-b border-black">Output</div>
+                                            <pre className="p-4 flex-1 text-xs font-mono text-white whitespace-pre-wrap overflow-auto">
+                                                {output || <span className="opacity-30 italic">Click Run to see output...</span>}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => handleAction({ ...data, practice: [{ ...practiceEntry, time: formatTime(timer), id: Date.now(), date: new Date().toLocaleDateString('en-GB') }, ...data.practice] }, "Add Practice")} className="w-full bg-slate-900 dark:bg-white text-white dark:text-black py-4 font-bold rounded-2xl shadow-xl hover:opacity-90 transition-all text-lg">Save & Finish</button>
                             </div>
-                        ) : (
-                            <div className="max-w-5xl mx-auto space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="stat-card border-l-4 border-l-orange-500">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] font-black uppercase opacity-40">Persistence</span>
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} className="text-xs opacity-40 hover:opacity-100">&lt;</button>
-                                                <span className="text-[10px] font-bold text-orange-500">{calendarData.monthName}</span>
-                                                <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} className="text-xs opacity-40 hover:opacity-100">&gt;</button>
-                                            </div>
-                                        </div>
-                                        <div className="calendar-grid">
-                                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="calendar-day-header">{d}</div>)}
-                                            {calendarData.days.map((d, i) => (
-                                                <div 
-                                                    key={i} 
-                                                    onClick={() => d.active && setSearchTerm(d.raw)}
-                                                    className={`calendar-day ${d.active ? 'day-active' : ''}`}
-                                                >
-                                                    {d.day}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="stat-card border-l-4 border-l-blue-600 justify-center text-center">
-                                        <span className="text-[10px] font-black uppercase opacity-40 mb-2">Progress</span>
-                                        <h2 className="text-6xl font-extrabold text-blue-500">{data.logs.length}</h2>
-                                        <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Solved</p>
-                                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                            <h2 className="text-6xl font-extrabold text-blue-500">{[...new Set(data.history)].length}</h2>
-                                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Days Worked</p>
-                                        </div>
-                                    </div>
-                                    <div className="stat-card border-l-4 border-l-indigo-600">
-                                        <span className="text-[10px] font-black uppercase opacity-40">Top Topics</span>
-                                        <div className="mt-3 space-y-2">
-                                            {Object.entries(groupedLogs).slice(0, 4).map(([t, l]) => (
-                                                <div key={t} className="flex justify-between items-center text-xs font-bold"><span className="opacity-60 truncate mr-2">{t}</span><span className="text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full text-[10px]">{l.length}</span></div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <input type="text" placeholder="Search title, topic, or code..." className="search-input text-slate-900 dark:text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                                    <div className="flex flex-wrap items-center justify-between gap-4">
-                                        <div className="flex gap-2">
-                                            {['Easy', 'Medium', 'Hard'].map(diff => (
-                                                <div key={diff} onClick={() => setDiffFilter(p => ({...p, [diff]: !p[diff]}))} className={`filter-chip chip-${diff.toLowerCase()} ${diffFilter[diff] ? 'active' : 'opacity-40'}`}>
-                                                    {diff} ({diffCounts[diff]})
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <button onClick={() => { setSearchTerm(""); setDiffFilter({Easy:true, Medium:true, Hard:true}); }} className="text-[10px] font-black uppercase text-blue-500 hover:underline">Reset Filters</button>
-                                    </div>
-                                </div>
-
-                                {Object.entries(groupedLogs).map(([topic, logs]) => (
-                                    <div key={topic}>
-                                        <div onClick={() => setExpandedTopic(expandedTopic === topic ? null : topic)} className="topic-header p-4 md:p-5 flex justify-between items-center">
-                                            <span className="text-base md:text-lg font-black">{highlightText(topic, searchTerm)}</span>
-                                            <span className="text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full">{logs.length} Qs</span>
-                                        </div>
-                                        {expandedTopic === topic && logs.map(log => (
-                                            <div key={log.id} className="question-item">
-                                                <div onClick={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)} className="flex justify-between items-center cursor-pointer group pr-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="diff-dot" style={{backgroundColor: diffColors[log.difficulty || 'Medium']}}></div>
-                                                        <h4 className="font-bold group-hover:text-blue-500 text-base">{highlightText(log.title, searchTerm)}</h4>
-                                                    </div>
-                                                    <div className="flex gap-4 items-center">
-                                                        <span className="text-[10px] font-bold opacity-30">{highlightText(log.date, searchTerm)}</span>
-                                                        <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete?")) { const fd = { ...data, logs: data.logs.filter(l => l.id !== log.id) }; setData(fd); fetch(API_URL, { method: "PUT", headers: { Authorization: `token ${token}` }, body: JSON.stringify({ message: "Del", content: btoa(unescape(encodeURIComponent(JSON.stringify(fd, null, 2)))), sha: log.sha }) }) } }} className="text-red-500 opacity-40 hover:opacity-100 ✕">✕</button>
-                                                    </div>
-                                                </div>
-                                                {expandedQuestion === log.id && (
-                                                    <div className="mt-4 p-4 md:p-6 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800">
-                                                        <div className="markdown-body text-xs md:text-sm leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: marked.parse(log.logic || "") }}></div>
-                                                        {log.code && (<div className="bg-[#0d1117] rounded-xl border border-[#30363d] overflow-hidden max-w-full mt-6"><div className="bg-[#161b22] px-3 md:px-4 py-2 border-b border-[#30363d] flex justify-between items-center"><span className="text-[8px] md:text-[10px] font-bold opacity-40 uppercase">Code</span><button onClick={() => { navigator.clipboard.writeText(log.code); alert("Copied!") }} className="text-[8px] md:text-[10px] font-bold text-blue-400 uppercase">Copy</button></div><pre className="p-3 md:p-4 overflow-x-auto text-[10px] md:text-[13px] text-slate-300 font-mono"><code className="language-cpp">{log.code}</code></pre></div>)}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                        ) : view === "practice_logs" ? (
+                            <div className="space-y-4 max-w-4xl mx-auto dark:text-white">
+                                <h2 className="text-2xl font-black mb-6">Practice History</h2>
+                                {data.practice.map(p => (
+                                    <div key={p.id} className="stat-card !min-h-0 p-6 mb-4 relative group">
+                                        <button onClick={() => handleDelete(p.id, 'practice')} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑</button>
+                                        <div className="flex justify-between font-bold"><div>{p.title} <span className="text-[10px] opacity-40 ml-2">{p.date}</span></div><div className="text-orange-500">{p.time}</div></div>
+                                        <div className="bg-[#0d1117] p-4 rounded-xl mt-4"><pre className="text-xs text-slate-300"><code>{p.code}</code></pre></div>
                                     </div>
                                 ))}
+                            </div>
+                        ) : view === "editing" ? (
+                            <div className="space-y-6 animate-fade-in dark:text-white">
+                                {/* Top Bar: Token & Metadata */}
+                                <div className="stat-card !min-h-0 p-6 space-y-4">
+                                    <h2 className="text-xl font-black mb-4">Create New Log</h2>
+                                    <input type="password" placeholder="GitHub Token (Required to Save)" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none transition-all focus:border-blue-500 text-slate-900 dark:text-white placeholder:text-slate-400" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value); }} />
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Date</label>
+                                            <input type="date" className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Topic</label>
+                                            <input type="text" placeholder="e.g. Arrays" className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Difficulty</label>
+                                            <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Question Title</label>
+                                        <input type="text" placeholder="e.g. Two Sum" className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-lg text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                {/* Section 1: Logic (Markdown + Preview) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px]">
+                                    <div className="stat-card !min-h-0 p-0 flex flex-col overflow-hidden border-2 border-transparent focus-within:border-blue-500 transition-colors">
+                                        <div className="bg-slate-200 dark:bg-slate-700 px-4 py-2 border-b border-slate-300 dark:border-slate-600 font-black text-xs uppercase tracking-widest text-slate-700 dark:text-white">Logic (Markdown)</div>
+                                        <textarea className="flex-1 p-4 bg-white dark:bg-slate-900 outline-none resize-none font-sans text-sm leading-relaxed text-slate-900 dark:text-white placeholder:text-slate-400" placeholder="Explain your approach here using Markdown..." value={entry.logic} onChange={e => setEntry({ ...entry, logic: e.target.value })}></textarea>
+                                    </div>
+                                    <div className="stat-card !min-h-0 p-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-900">
+                                        <div className="bg-slate-200 dark:bg-slate-700 px-4 py-2 border-b border-slate-300 dark:border-slate-600 font-black text-xs uppercase tracking-widest text-slate-700 dark:text-white">Preview</div>
+                                        <div
+                                            className="flex-1 p-4 overflow-auto markdown-body"
+                                            style={{ color: theme === 'dark' ? '#f1f5f9' : '#0f172a' }}
+                                            dangerouslySetInnerHTML={{ __html: marked.parse(entry.logic || "*Preview will appear here*") }}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                {/* Section 2: Code (Distinct) */}
+                                <div className="stat-card !min-h-0 p-0 overflow-hidden shadow-2xl border-t-4 border-blue-500">
+                                    <div className="bg-[#1e1e1e] text-white px-4 py-2 border-b border-black flex items-center justify-between">
+                                        <span className="text-xs font-bold uppercase tracking-widest">Solution Code</span>
+                                        <span className="text-[10px] opacity-50">C++</span>
+                                    </div>
+                                    <textarea className="w-full h-[400px] bg-[#1e1e1e] text-[#d4d4d4] p-4 outline-none font-mono text-sm resize-none" spellCheck="false" placeholder="// Write your final solution code here..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
+                                </div>
+
+                                <button onClick={() => handleAction({ ...data, logs: [{ ...entry, id: Date.now(), date: new Date(entry.date).toLocaleDateString('en-GB') }, ...data.logs], history: [...new Set([...data.history, new Date(entry.date).toLocaleDateString('en-GB')])] }, "Add Log")} className="w-full bg-slate-900 dark:bg-white hover:opacity-90 text-white dark:text-black py-4 font-bold rounded-xl shadow-xl transition-all transform hover:scale-[1.01]">Push Log to GitHub</button>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {/* Hero Section */}
+                                <div className="mb-2">
+                                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-2">{greeting}, {USER}! 👋</h1>
+                                    <p className="text-slate-500 dark:text-slate-400 font-medium">Ready to crack some code today?</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <Calendar
+                                        calendarData={calendarData}
+                                        setSearchTerm={setSearchTerm}
+                                        onPrev={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+                                        onNext={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+                                    />
+                                    <StatCard className="border-l-4 border-l-blue-600 flex items-center justify-center relative overflow-hidden">
+                                        <div className="relative w-40 h-40 flex items-center justify-center">
+                                            <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
+                                                <circle className="text-slate-100 dark:text-slate-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                                                <circle className="text-blue-500 progress-ring__circle stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - (data.logs.length / 100))}`}></circle>
+                                            </svg>
+                                            <div className="absolute flex flex-col items-center">
+                                                <h2 className="text-4xl font-black text-blue-500">{data.logs.length}</h2>
+                                                <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest dark:text-white">Solved</p>
+                                            </div>
+                                        </div>
+                                        <div className="absolute right-4 bottom-4 text-xs font-bold text-slate-400">Goal: 100</div>
+                                    </StatCard>
+                                    <StatCard className="border-l-4 border-l-indigo-600 flex items-center justify-center relative overflow-hidden">
+                                        <div className="relative w-40 h-40 flex items-center justify-center">
+                                            <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
+                                                <circle className="text-slate-100 dark:text-slate-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                                                <circle className="text-indigo-500 progress-ring__circle stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - (data.history.length / 100))}`}></circle>
+                                            </svg>
+                                            <div className="absolute flex flex-col items-center">
+                                                <h2 className="text-4xl font-black text-indigo-500">{data.history.length}</h2>
+                                                <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest dark:text-white">Days Worked</p>
+                                            </div>
+                                        </div>
+                                        <div className="absolute right-4 bottom-4 text-xs font-bold text-slate-400">Goal: 100</div>
+                                    </StatCard>
+                                    <StatCard className="border-l-4 border-l-orange-500 flex items-center justify-center relative overflow-hidden">
+                                        <div className="relative w-40 h-40 flex items-center justify-center">
+                                            <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
+                                                <circle className="text-slate-100 dark:text-slate-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                                                <circle className="text-orange-500 progress-ring__circle stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - (data.practice.length / 50))}`}></circle>
+                                            </svg>
+                                            <div className="absolute flex flex-col items-center">
+                                                <h2 className="text-4xl font-black text-orange-500">{data.practice.length}</h2>
+                                                <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest dark:text-white">Sessions</p>
+                                            </div>
+                                        </div>
+                                        <div className="absolute right-4 bottom-4 text-xs font-bold text-slate-400">Goal: 150</div>
+                                    </StatCard>
+                                </div>
+
+                                {/* Topic Distribution Chart */}
+                                {topicStats.length > 0 && (
+                                    <div className="stat-card !min-h-0 p-6 space-y-4">
+                                        <h3 className="text-xs font-black uppercase tracking-widest opacity-50 dark:text-white">Topic Distribution</h3>
+                                        <div className="flex h-4 rounded-full overflow-hidden w-full bg-slate-100 dark:bg-slate-800">
+                                            {topicStats.map((t, i) => (
+                                                <div key={t.name} style={{ width: `${t.percent}%`, backgroundColor: `hsl(${220 + (i * 40)}, 70%, 50%)` }} title={`${t.name}: ${t.count}`} />
+                                            ))}
+                                        </div>
+                                        <div className="flex flex-wrap gap-3">
+                                            {topicStats.slice(0, 5).map((t, i) => (
+                                                <div key={t.name} className="flex items-center gap-1.5 text-[10px] font-bold dark:text-white">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `hsl(${220 + (i * 40)}, 70%, 50%)` }}></div>
+                                                    {t.name} <span className="opacity-50">({Math.round(t.percent)}%)</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Topic Explorer Grid */}
+                                {topicStats.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-extrabold dark:text-white">Explore Topics</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                            {topicStats.map((t) => (
+                                                <button
+                                                    key={t.name}
+                                                    onClick={() => { setSearchTerm(t.name); setPage(1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}
+                                                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all text-left group"
+                                                >
+                                                    <div className="text-[10px] font-bold opacity-40 uppercase mb-1 dark:text-white group-hover:text-blue-500">Topic</div>
+                                                    <div className="font-bold text-sm truncate dark:text-white mb-2">{t.name}</div>
+                                                    <div className="inline-block bg-slate-100 dark:bg-slate-800 text-xs font-bold px-2 py-1 rounded-lg dark:text-white group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 transition-colors">
+                                                        {t.count} Qs
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                <input type="text" placeholder="Search logs..." className="search-input text-slate-900 dark:text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                <div className="flex gap-2 flex-wrap items-center">
+                                    {['Easy', 'Medium', 'Hard'].map(diff => (
+                                        <div
+                                            key={diff}
+                                            onClick={() => setDiffFilter(p => ({ ...p, [diff]: !p[diff] }))}
+                                            className={`filter-chip chip-${diff.toLowerCase()} ${diffFilter[diff] ? 'active' : 'opacity-40'} flex items-center gap-2`}
+                                        >
+                                            {diff} <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-[9px]">{diffCounts[diff]}</span>
+                                        </div>
+                                    ))}
+                                    <button
+                                        onClick={() => { setSearchTerm(""); setDiffFilter({ Easy: true, Medium: true, Hard: true }); setSortBy("Newest"); }}
+                                        className="ml-auto px-4 h-10 rounded-xl font-bold text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2 group box-border shrink-0"
+                                    >
+                                        <span className="text-lg group-hover:rotate-180 transition-transform">↺</span> Reset
+                                    </button>
+                                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+                                    <div className="relative shrink-0">
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value)}
+                                            className="appearance-none pl-4 pr-10 h-10 rounded-xl font-bold text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 outline-none text-slate-700 dark:text-slate-300 hover:border-indigo-500 cursor-pointer transition-colors box-border"
+                                        >
+                                            <option value="Newest">Newest First</option>
+                                            <option value="Oldest">Oldest First</option>
+                                            <option value="Difficulty">Difficulty</option>
+                                            <option value="Topic">Topic (A-Z)</option>
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-8">
+                                    {Object.entries(groupedLogs).map(([topic, logs]) => (
+                                        <div key={topic} className="space-y-4 animate-fade-in">
+                                            <h3 className="font-extrabold text-lg flex items-center gap-2 dark:text-white before:content-['#'] before:text-blue-600 before:mr-1">{topic} <span className="text-xs opacity-40 bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">{logs.length}</span></h3>
+                                            <div className="grid gap-4">
+                                                {logs.map(log => (
+                                                    <LogEntry
+                                                        key={log.id}
+                                                        log={log}
+                                                        diffColors={diffColors}
+                                                        expanded={expandedQuestion === log.id}
+                                                        onToggle={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)}
+                                                        onDelete={(id) => handleDelete(id, log.type)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {Object.keys(groupedLogs).length === 0 && (
+                                        <div className="flex flex-col items-center justify-center py-20 text-center opacity-50 dark:text-white space-y-4">
+                                            <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-4xl">
+                                                🔍
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold">No logs found</h3>
+                                                <p className="text-sm opacity-60">Try adjusting your search or filters</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {filteredLogs.length > logsToDisplay.length && (
+                                        <div className="flex justify-center pt-8">
+                                            <button
+                                                onClick={() => setPage(p => p + 1)}
+                                                className="px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors dark:text-white"
+                                            >
+                                                Load More ({filteredLogs.length - logsToDisplay.length} remaining)
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setView('editing')}
+                                    className="fixed bottom-8 right-8 w-14 h-14 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full shadow-2xl flex items-center justify-center text-3xl font-light transform hover:scale-110 transition-all z-50"
+                                    title="Quick Log"
+                                >
+                                    +
+                                </button>
                             </div>
                         )}
                     </main>
                 </div>
             );
         }
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
     </script>
 </body>
 

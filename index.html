@@ -825,6 +825,21 @@
             </div>
         );
 
+        const Toast = ({ message, visible, type }) => {
+            if (!visible) return null;
+            const colors = {
+                warning: "border-orange-500 text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20",
+                success: "border-green-500 text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20",
+                error: "border-red-500 text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20"
+            };
+            return (
+                <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-3 rounded-xl border ${colors[type] || colors.warning} shadow-2xl backdrop-blur-md animate-slide-up flex items-center gap-3 font-bold`}>
+                    <span>{type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
+                    <span>{message}</span>
+                </div>
+            );
+        };
+
         // --- Main App ---
 
         function App() {
@@ -856,6 +871,13 @@
             const timerRef = useRef(null);
 
             const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: new Date().toISOString().split('T')[0] });
+
+            // Toast State
+            const [toast, setToast] = useState({ message: "", visible: false, type: "warning" });
+            const showToast = (message, type = "warning") => {
+                setToast({ message, visible: true, type });
+                setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
+            };
 
             const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
             const diffColors = { Easy: "#22c55e", Medium: "#f97316", Hard: "#ef4444" };
@@ -1002,12 +1024,13 @@
             }, [data.theory]);
 
             const handleAction = async (updatedData, msg) => {
+                if (!token) { showToast("Please enter GitHub Token first!", "error"); return; }
                 try {
                     const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
                     const file = await res.json();
                     await fetch(API_URL, { method: "PUT", headers: { Authorization: `token ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(updatedData, null, 2)))), sha: file.sha }) });
-                    setData(updatedData); confetti({ particleCount: 150 }); setView("dashboard");
-                } catch (e) { alert("Action failed. Check Token/Network."); }
+                    setData(updatedData); confetti({ particleCount: 150 }); setView("dashboard"); showToast("Saved successfully!", "success");
+                } catch (e) { showToast("Action failed. Check Token/Network.", "error"); }
             };
 
             const runCode = async () => {
@@ -1037,7 +1060,7 @@
             };
 
             const handleDelete = async (id, type) => {
-                if (!token) { return alert("Please enter your GitHub token in the '+ Log' section first."); }
+                if (!token) { return showToast("Please enter GitHub Token first!", "error"); }
                 if (!confirm("Are you sure? This cannot be undone.")) return;
 
                 const updatedData = { ...data };
@@ -1158,6 +1181,7 @@
 
             return (
                 <div className="min-h-screen pb-10 w-full overflow-x-hidden relative">
+                    <Toast message={toast.message} visible={toast.visible} type={toast.type} />
                     <div className="blob blob-1"></div>
                     <div className="blob blob-2"></div>
                     <div className="blob blob-3"></div>

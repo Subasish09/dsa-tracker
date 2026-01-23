@@ -41,5 +41,15 @@
     "19/01/2026",
     "20/01/2026",
     "21/01/2026"
+  ],
+  "practice": [],
+  "theory": [
+    {
+      "id": 1769143787001,
+      "title": "OSI-TCP/IP",
+      "topic": "OSI-TCP/IP",
+      "date": "2026-01-23",
+      "content": "# Networking Fundamentals – OSI, TCP/IP\n\n---\n\n## 1. Why Do We Need Layers?\n\nNetworking is complex. Layers exist to:\n- Break the problem into manageable parts\n- Assign clear responsibilities\n- Make debugging easier\n- Allow independent evolution of protocols\n\n**Key idea:**  \nLayers define *who is responsible for what*.\n\n---\n\n## 2. OSI vs TCP/IP – Purpose, Not Theory\n\n### OSI Model\n- 7-layer **conceptual model**\n- Used for:\n  - Learning\n  - Design thinking\n  - Debugging\n- Not implemented strictly in real systems\n\n### TCP/IP Model\n- Practical model\n- What actually runs the Internet\n- Fewer layers, based on real-world needs\n\n---\n\n## 3. OSI Layers\n- Application\n- Presentation\n- Session\n- Transport\n- Network\n- Data Link\n- Physical\n\n---\n\n## 4. TCP/IP Layers\n- Application\n- Transport\n- Internet\n- Network Access\n\n\n---\n\n## 5. OSI ↔ TCP/IP Mapping\n\n| OSI Layer        | Responsibility                     | TCP/IP Layer      |\n|------------------|------------------------------------|-------------------|\n| Application (7)  | HTTP, FTP, DNS                     | Application       |\n| Presentation (6) | Encryption, encoding, compression  | Application       |\n| Session (5)      | Session management                 | Application       |\n| Transport (4)    | TCP, UDP, ports                    | Transport         |\n| Network (3)      | IP, routing                        | Internet          |\n| Data Link (2)    | Ethernet, MAC, ARP                 | Network Access    |\n| Physical (1)     | Bits, signals, wire                | Network Access    |\n\n### Why layers are merged in TCP/IP\n- Presentation & Session logic handled by applications/libraries\n- Physical & Data Link tightly coupled in hardware\n- TCP/IP favors practicality over strict separation\n\n---\n\n## 6. Key Interview Insight\n\n- **OSI** → thinking, debugging, explanation\n- **TCP/IP** → implementation, real traffic\n\n> OSI is the map, TCP/IP is the territory.\n\n---"
+    }
   ]
 }

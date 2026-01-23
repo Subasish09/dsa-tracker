@@ -788,7 +788,7 @@
             <div className="stat-card !min-h-0 cursor-pointer p-6 dark:text-white" onClick={onToggle}>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="diff-dot" style={{ backgroundColor: diffColors[log.difficulty || 'Medium'], width: 8, height: 8, borderRadius: '50%' }}></div>
+                        <div className="diff-dot" style={{ backgroundColor: diffColors[log.difficulty || 'Medium'], width: 12, height: 12, borderRadius: '50%', boxShadow: `0 0 8px ${diffColors[log.difficulty || 'Medium']}`, flexShrink: 0 }}></div>
                         <span className="font-bold">{log.title}</span>
                         {log.type === 'practice' && <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">IDE</span>}
                     </div>
@@ -1304,7 +1304,7 @@
                                 </div>
                             </div>
                         ) : view === "theory_read" ? (
-                            <div className="space-y-6 animate-fade-in dark:text-white max-w-4xl mx-auto min-h-screen">
+                            <div className="space-y-6 animate-fade-in dark:text-white w-full min-h-screen">
                                 <div className="flex justify-between items-center sticky top-0 bg-var(--bg) py-4 z-10 backdrop-blur-md bg-opacity-90">
                                     <button onClick={() => setView("theory")} className="text-sm font-bold opacity-50 hover:opacity-100 flex items-center gap-1">← Back to Notes</button>
                                     <div className="flex items-center gap-2">

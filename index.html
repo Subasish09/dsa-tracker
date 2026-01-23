@@ -17,6 +17,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
     <script>
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
@@ -485,7 +486,7 @@
             return <div ref={divEl} className="w-full h-full" />;
         };
 
-        const NavBar = ({ view, setView, theme, setTheme, lastSync }) => (
+        const NavBar = ({ view, setView, theme, setTheme, lastSync, onNewLog }) => (
             <nav className="sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#020617] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 text-slate-900 dark:text-white">
                 <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
                     <div className="flex items-center gap-3">
@@ -499,11 +500,12 @@
                 <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
                     <button onClick={() => setView("dashboard")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'dashboard' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>Home</button>
                     <button onClick={() => setView("practice")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'practice' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>IDE</button>
+                    <button onClick={() => setView("theory")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'theory' || view === 'theory_edit' ? 'bg-white dark:bg-slate-800 text-pink-500 shadow-sm' : 'opacity-60 hover:opacity-100'}`}>Notes</button>
                     <button onClick={() => setView("practice_logs")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'practice_logs' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>History</button>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => {
-                        const blob = new Blob([localStorage.getItem('dsa-tracker-data') || JSON.stringify({ logs: [], history: [], practice: [] })], { type: 'application/json' });
+                        const blob = new Blob([localStorage.getItem('dsa-tracker-data') || JSON.stringify({ logs: [], history: [], practice: [], theory: [] })], { type: 'application/json' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
@@ -513,9 +515,9 @@
                         <span className="text-sm">💾</span> <span className="hidden md:inline">Export</span>
                     </button>
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 opacity-80 hover:opacity-100 transition-opacity">{theme === 'light' ? '🌙' : '☀️'}</button>
-                    {view === 'dashboard' && <button onClick={() => setView("editing")} className="bg-slate-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold text-xs shadow-lg transform hover:scale-105 transition-transform">+ Log</button>}
+                    {view === 'dashboard' && <button onClick={onNewLog} className="bg-slate-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold text-xs shadow-lg transform hover:scale-105 transition-transform">+ Log</button>}
                 </div>
-            </nav>
+            </nav >
         );
 
         const StatCard = ({ children, className = "", style = {} }) => (
@@ -541,7 +543,7 @@
             </div>
         );
 
-        const LogEntry = ({ log, diffColors, expanded, onToggle, onDelete }) => (
+        const LogEntry = ({ log, diffColors, expanded, onToggle, onDelete, onEdit, onDownload }) => (
             <div className="stat-card !min-h-0 cursor-pointer p-6 dark:text-white" onClick={onToggle}>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
@@ -551,33 +553,31 @@
                     </div>
                     <div className="flex items-center gap-4">
                         <span className="text-[10px] opacity-40">{log.date}</span>
-                        {onDelete && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onDelete(log.id); }}
-                                className="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition-colors"
-                                title="Delete Log"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                            </button>
-                        )}
                     </div>
                 </div>
                 {expanded && (
-                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-4">
+                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-4 cursor-default" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-end gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
+                            <button onClick={() => onEdit(log)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold flex items-center gap-1">✏️ Edit</button>
+                            <button onClick={() => onDownload(log)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-xs font-bold flex items-center gap-1">⬇️ PDF</button>
+                            <button onClick={() => onDelete(log.id)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 rounded-lg text-xs font-bold flex items-center gap-1">🗑 Delete</button>
+                        </div>
                         {log.logic ? (
                             <div className="markdown-body" dangerouslySetInnerHTML={{ __html: marked.parse(log.logic) }}></div>
                         ) : (
                             <div className="text-xs opacity-50 italic">No notes recorded for this session.</div>
                         )}
-                        <div className="relative group/code">
-                            <button
-                                onClick={() => { navigator.clipboard.writeText(log.code); alert('Code copied!'); }}
-                                className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg opacity-0 group-hover/code:opacity-100 transition-opacity text-[10px] font-bold z-10"
-                            >
-                                COPY
-                            </button>
-                            <pre className="p-4 bg-[#0d1117] rounded-xl text-xs text-white overflow-x-auto"><code>{log.code}</code></pre>
-                        </div>
+                        {log.code && (
+                            <div className="relative group/code">
+                                <button
+                                    onClick={() => { navigator.clipboard.writeText(log.code); alert('Code copied!'); }}
+                                    className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg opacity-0 group-hover/code:opacity-100 transition-opacity text-[10px] font-bold z-10"
+                                >
+                                    COPY
+                                </button>
+                                <pre className="p-4 bg-[#0d1117] rounded-xl text-xs text-white overflow-x-auto"><code>{log.code}</code></pre>
+                            </div>
+                        )}
                         {log.timer && <div className="text-[10px] font-mono opacity-50 text-right">Time Taken: {Math.floor(log.timer / 60)}m {log.timer % 60}s</div>}
                     </div>
                 )}
@@ -587,7 +587,7 @@
         // --- Main App ---
 
         function App() {
-            const [data, setData] = useState({ logs: [], history: [], practice: [] });
+            const [data, setData] = useState({ logs: [], history: [], practice: [], theory: [] });
             const [loading, setLoading] = useState(true);
             const [view, setView] = useState("dashboard");
             const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -598,12 +598,16 @@
             const [diffFilter, setDiffFilter] = useState({ Easy: true, Medium: true, Hard: true });
             const [expandedQuestion, setExpandedQuestion] = useState(null);
 
+            // New State for Theory Search
+            const [theorySearchTerm, setTheorySearchTerm] = useState("");
+
             // New State for Enhancements
             const [sortBy, setSortBy] = useState("Newest");
             const [page, setPage] = useState(1);
             const ITEMS_PER_PAGE = 10;
 
             const [practiceEntry, setPracticeEntry] = useState({ title: "", topic: "", code: "", language: "cpp" });
+            const [theoryEntry, setTheoryEntry] = useState({ id: null, title: "", topic: "", date: new Date().toISOString().split('T')[0], content: "" });
             const [output, setOutput] = useState("");
             const [isCompiling, setIsCompiling] = useState(false);
             const [timer, setTimer] = useState(0);
@@ -641,11 +645,11 @@
                         return res.json();
                     })
                     .then(resData => {
-                        setData({ logs: resData.logs || [], history: resData.history || [], practice: resData.practice || [] });
+                        setData({ logs: resData.logs || [], history: resData.history || [], practice: resData.practice || [], theory: resData.theory || [] });
                         setLastSync(new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
                         setLoading(false);
                     }).catch(() => {
-                        setData({ logs: [], history: [], practice: [] });
+                        setData({ logs: [], history: [], practice: [], theory: [] });
                         setLastSync("Offline / Error");
                         setLoading(false);
                     });
@@ -744,6 +748,18 @@
                     .map(([name, count]) => ({ name, count, percent: (count / total) * 100 }));
             }, [data.logs, data.practice]);
 
+            // Note Topics Configuration
+            const noteTopics = useMemo(() => {
+                const stats = {};
+                data.theory.forEach(t => {
+                    const topic = t.topic ? t.topic.trim() : "General";
+                    stats[topic] = (stats[topic] || 0) + 1;
+                });
+                return Object.entries(stats)
+                    .sort((a, b) => b[1] - a[1]) // Sort by count desc
+                    .map(([name, count]) => ({ name, count }));
+            }, [data.theory]);
+
             const handleAction = async (updatedData, msg) => {
                 try {
                     const res = await fetch(API_URL, { headers: { Authorization: `token ${token}` } });
@@ -786,11 +802,45 @@
                 const updatedData = { ...data };
                 if (type === 'practice') {
                     updatedData.practice = data.practice.filter(p => p.id !== id);
+                } else if (type === 'theory') {
+                    updatedData.theory = data.theory.filter(t => t.id !== id);
                 } else {
                     updatedData.logs = data.logs.filter(l => l.id !== id);
                 }
 
-                await handleAction(updatedData, `Deleted ${type === 'practice' ? 'Practice' : 'Log'} Item`);
+                await handleAction(updatedData, `Deleted ${type === 'practice' ? 'Practice' : type === 'theory' ? 'Theory' : 'Log'} Item`);
+            };
+
+            const downloadPDF = (item) => {
+                const element = document.createElement('div');
+                element.className = 'markdown-body p-8 bg-white text-black';
+                element.style.position = 'absolute';
+                element.style.left = '-9999px';
+                element.style.top = '0';
+                element.style.width = '800px'; // Fixed width for better PDF rendering
+
+                element.innerHTML = `
+                    <h1 style="border-bottom: 2px solid #2563eb; padding-bottom: 10px; color: #2563eb;">${item.title || "Untitled"}</h1>
+                    <div style="margin-bottom: 20px; color: #666; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                        ${item.topic || "General"} • ${item.date || new Date().toLocaleDateString()}
+                    </div>
+                    ${marked.parse(item.content || item.logic || "")}
+                    ${item.code ? `<pre style="background:#f5f5f5; padding:15px; border-radius:5px; margin-top:20px;"><code>${item.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>` : ''}
+                `;
+
+                document.body.appendChild(element);
+
+                const opt = {
+                    margin: 10,
+                    filename: `${(item.title || 'document').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    document.body.removeChild(element);
+                });
             };
 
             // Enhanced Loading State (Skeleton)
@@ -842,7 +892,17 @@
 
             return (
                 <div className="min-h-screen pb-10 w-full overflow-x-hidden">
-                    <NavBar view={view} setView={handleViewChange} theme={theme} setTheme={setTheme} lastSync={lastSync} />
+                    <NavBar
+                        view={view}
+                        setView={handleViewChange}
+                        theme={theme}
+                        setTheme={setTheme}
+                        lastSync={lastSync}
+                        onNewLog={() => {
+                            setEntry({ title: "", logic: "", code: "", difficulty: "Medium", topic: "General", date: new Date().toISOString().split('T')[0] });
+                            setView("editing");
+                        }}
+                    />
 
                     <main className="max-w-[1600px] mx-auto p-4 md:p-8">
                         {view === "practice" ? (
@@ -900,6 +960,130 @@
                                     </div>
                                 </div>
                                 <button onClick={() => handleAction({ ...data, practice: [{ ...practiceEntry, time: formatTime(timer), id: Date.now(), date: new Date().toLocaleDateString('en-GB') }, ...data.practice] }, "Add Practice")} className="w-full bg-slate-900 dark:bg-white text-white dark:text-black py-4 font-bold rounded-2xl shadow-xl hover:opacity-90 transition-all text-lg">Save & Finish</button>
+                            </div>
+                        ) : view === "theory" ? (
+                            <div className="space-y-6 animate-fade-in dark:text-white">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-3xl font-black">Theory Notes</h2>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Search notes..."
+                                            value={theorySearchTerm}
+                                            onChange={(e) => setTheorySearchTerm(e.target.value)}
+                                            className="hidden md:block bg-slate-100 dark:bg-slate-800 border-none outline-none rounded-xl px-4 py-2 font-bold text-sm min-w-[200px]"
+                                        />
+                                        <button onClick={() => { setTheoryEntry({ id: null, title: "", topic: "", date: new Date().toISOString().split('T')[0], content: "" }); setView("theory_edit"); }} className="bg-pink-600 hover:bg-pink-500 text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-transform hover:scale-105">+ New Note</button>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Search */}
+                                <input
+                                    type="text"
+                                    placeholder="Search notes..."
+                                    value={theorySearchTerm}
+                                    onChange={(e) => setTheorySearchTerm(e.target.value)}
+                                    className="md:hidden w-full bg-slate-100 dark:bg-slate-800 border-none outline-none rounded-xl px-4 py-3 font-bold text-sm mb-4"
+                                />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {data.theory
+                                        .filter(t =>
+                                            (t.title && t.title.toLowerCase().includes(theorySearchTerm.toLowerCase())) ||
+                                            (t.topic && t.topic.toLowerCase().includes(theorySearchTerm.toLowerCase())) ||
+                                            (t.content && t.content.toLowerCase().includes(theorySearchTerm.toLowerCase()))
+                                        )
+                                        .map(t => (
+                                            <div key={t.id} onClick={() => { setTheoryEntry(t); setView("theory_read"); }} className="stat-card !min-h-0 p-6 relative group border-t-4 border-t-pink-500 hover:border-t-pink-400 cursor-pointer hover:scale-[1.02] transition-transform">
+                                                <h3 className="text-xl font-extrabold mb-1 line-clamp-1">{t.title}</h3>
+                                                <div className="text-xs font-bold opacity-50 uppercase tracking-widest mb-4">{t.topic} • {t.date}</div>
+                                                <div className="line-clamp-4 opacity-70 text-sm markdown-body" dangerouslySetInnerHTML={{ __html: marked.parse(t.content) }}></div>
+                                            </div>
+                                        ))}
+                                    {data.theory.length === 0 && (
+                                        <div className="col-span-full text-center p-12 opacity-50 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl">
+                                            <div className="text-4xl mb-4">📓</div>
+                                            <p className="font-bold">No notes yet. Create one to get started!</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : view === "theory_read" ? (
+                            <div className="space-y-6 animate-fade-in dark:text-white max-w-4xl mx-auto min-h-screen">
+                                <div className="flex justify-between items-center sticky top-0 bg-var(--bg) py-4 z-10 backdrop-blur-md bg-opacity-90">
+                                    <button onClick={() => setView("theory")} className="text-sm font-bold opacity-50 hover:opacity-100 flex items-center gap-1">← Back to Notes</button>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => { setTheoryEntry(theoryEntry); setView("theory_edit"); }} className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-xl font-bold transition-colors flex items-center gap-2 text-sm">
+                                            <span>✏️</span> Edit
+                                        </button>
+                                        <button onClick={() => downloadPDF(theoryEntry)} className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-4 py-2 rounded-xl font-bold transition-colors flex items-center gap-2 text-sm">
+                                            <span>⬇️</span> PDF
+                                        </button>
+                                        <button onClick={() => { handleDelete(theoryEntry.id, 'theory'); setView("theory"); }} className="bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 px-4 py-2 rounded-xl font-bold transition-colors flex items-center gap-2 text-sm">
+                                            <span>🗑</span> Delete
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="stat-card !min-h-0 p-8 md:p-12 border-t-4 border-t-pink-500">
+                                    <h1 className="text-3xl md:text-5xl font-black mb-4 text-slate-900 dark:text-white leading-tight">{theoryEntry.title}</h1>
+                                    <div className="flex gap-4 mb-8 text-xs font-bold uppercase tracking-widest opacity-50 border-b border-slate-200 dark:border-slate-800 pb-8">
+                                        <span>{theoryEntry.topic}</span>
+                                        <span>•</span>
+                                        <span>{theoryEntry.date}</span>
+                                    </div>
+                                    <div className="markdown-body text-lg" dangerouslySetInnerHTML={{ __html: marked.parse(theoryEntry.content || "") }}></div>
+                                </div>
+                            </div>
+                        ) : view === "theory_edit" ? (
+                            <div className="space-y-4 animate-fade-in dark:text-white h-[calc(100vh-140px)] flex flex-col">
+                                <div className="flex justify-between items-center">
+                                    <button onClick={() => setView(theoryEntry.id ? "theory_read" : "theory")} className="text-sm font-bold opacity-50 hover:opacity-100">← Back</button>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-xl font-black">{theoryEntry.id ? 'Edit Note' : 'New Note'}</h2>
+                                        <button onClick={() => {
+                                            const newEntry = { ...theoryEntry, id: theoryEntry.id || Date.now() };
+                                            const newData = {
+                                                ...data,
+                                                theory: theoryEntry.id ? data.theory.map(t => t.id === theoryEntry.id ? newEntry : t) : [newEntry, ...data.theory]
+                                            };
+                                            handleAction(newData, `${theoryEntry.id ? 'Updated' : 'Created'} Theory Note: ${theoryEntry.title}`);
+                                            setTheoryEntry(newEntry);
+                                            // Return to read mode if editing, else stay or go to list
+                                            if (theoryEntry.id) setView("theory_read");
+                                            else setView("theory");
+                                        }} className="bg-pink-600 hover:bg-pink-500 text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-transform hover:scale-105 text-sm">
+                                            Save Note
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <input type="text" placeholder="Note Title (e.g. OSI Model)" className="flex-[2] p-3 bg-white dark:bg-[#1e1e1e] border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-lg outline-none" value={theoryEntry.title} onChange={e => setTheoryEntry({ ...theoryEntry, title: e.target.value })} />
+                                    <input type="text" placeholder="Topic" className="flex-1 p-3 bg-white dark:bg-[#1e1e1e] border border-slate-200 dark:border-slate-700 rounded-xl font-bold outline-none" value={theoryEntry.topic} onChange={e => setTheoryEntry({ ...theoryEntry, topic: e.target.value })} />
+                                    <input type="date" className="p-3 bg-white dark:bg-[#1e1e1e] border border-slate-200 dark:border-slate-700 rounded-xl font-bold outline-none" value={theoryEntry.date} onChange={e => setTheoryEntry({ ...theoryEntry, date: e.target.value })} />
+                                </div>
+
+                                {/* Split Editor Layout */}
+                                <div className="flex-1 flex flex-col border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-[#1e1e1e]">
+                                    {/* Top: Editor */}
+                                    <div className="flex-1 border-b border-black relative">
+                                        <div className="absolute top-0 right-0 z-10 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg backdrop-blur-sm uppercase tracking-widest pointer-events-none">Markdown Source</div>
+                                        <Editor
+                                            language="markdown"
+                                            theme={theme}
+                                            value={theoryEntry.content}
+                                            onChange={(val) => setTheoryEntry(prev => ({ ...prev, content: val }))}
+                                        />
+                                    </div>
+                                    {/* Bottom: Preview */}
+                                    <div className="flex-1 bg-white dark:bg-[#0d1117] overflow-auto flex flex-col relative">
+                                        <div className="sticky top-0 right-0 z-10 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-1 text-xs font-bold uppercase tracking-widest opacity-70">Live Preview</div>
+                                        <div
+                                            className="p-8 markdown-body"
+                                            dangerouslySetInnerHTML={{ __html: marked.parse(theoryEntry.content || "*Preview will appear here...*") }}
+                                        ></div>
+                                    </div>
+                                </div>
                             </div>
                         ) : view === "practice_logs" ? (
                             <div className="space-y-4 max-w-4xl mx-auto dark:text-white">
@@ -963,7 +1147,22 @@
                                     <textarea className="w-full h-[400px] bg-[#1e1e1e] text-[#d4d4d4] p-4 outline-none font-mono text-sm resize-none" spellCheck="false" placeholder="// Write your final solution code here..." value={entry.code} onChange={e => setEntry({ ...entry, code: e.target.value })}></textarea>
                                 </div>
 
-                                <button onClick={() => handleAction({ ...data, logs: [{ ...entry, id: Date.now(), date: new Date(entry.date).toLocaleDateString('en-GB') }, ...data.logs], history: [...new Set([...data.history, new Date(entry.date).toLocaleDateString('en-GB')])] }, "Add Log")} className="w-full bg-slate-900 dark:bg-white hover:opacity-90 text-white dark:text-black py-4 font-bold rounded-xl shadow-xl transition-all transform hover:scale-[1.01]">Push Log to GitHub</button>
+                                <button onClick={() => {
+                                    // If ID exists, update. Else add new.
+                                    const newLog = { ...entry, id: entry.id || Date.now(), date: entry.date || new Date().toISOString().split('T')[0] };
+                                    const formattedDate = new Date(newLog.date).toLocaleDateString('en-GB');
+
+                                    let newLogs;
+                                    if (entry.id) {
+                                        newLogs = data.logs.map(l => l.id === entry.id ? { ...newLog, date: formattedDate } : l);
+                                    } else {
+                                        newLogs = [{ ...newLog, date: formattedDate }, ...data.logs];
+                                    }
+
+                                    const newHistory = [...new Set([...data.history, formattedDate])];
+
+                                    handleAction({ ...data, logs: newLogs, history: newHistory }, entry.id ? "Updated Log" : "Added New Log");
+                                }} className="w-full bg-slate-900 dark:bg-white hover:opacity-90 text-white dark:text-black py-4 font-bold rounded-xl shadow-xl transition-all transform hover:scale-[1.01]">Push Log to GitHub</button>
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -1041,7 +1240,29 @@
                                     </div>
                                 )}
 
-                                {/* Topic Explorer Grid */}
+                                {/* Study Topics (Notes) Grid */}
+                                {noteTopics.length > 0 && (
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-extrabold dark:text-white text-pink-500">Study Topics</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                            {noteTopics.map((t) => (
+                                                <button
+                                                    key={t.name}
+                                                    onClick={() => { setTheorySearchTerm(t.name); setView('theory'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-pink-500 dark:hover:border-pink-500 transition-all text-left group"
+                                                >
+                                                    <div className="text-[10px] font-bold opacity-40 uppercase mb-1 dark:text-white group-hover:text-pink-500">Note Topic</div>
+                                                    <div className="font-bold text-sm truncate dark:text-white mb-2">{t.name}</div>
+                                                    <div className="inline-block bg-slate-100 dark:bg-slate-800 text-xs font-bold px-2 py-1 rounded-lg dark:text-white group-hover:bg-pink-50 dark:group-hover:bg-pink-900/30 group-hover:text-pink-600 transition-colors">
+                                                        {t.count} Notes
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Topic Explorer Grid (Logs) */}
                                 {topicStats.length > 0 && (
                                     <div className="space-y-4">
                                         <h3 className="text-lg font-extrabold dark:text-white">Explore Topics</h3>
@@ -1109,6 +1330,8 @@
                                                         expanded={expandedQuestion === log.id}
                                                         onToggle={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)}
                                                         onDelete={(id) => handleDelete(id, log.type)}
+                                                        onEdit={(l) => { setEntry(l); setView('editing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                                        onDownload={(l) => downloadPDF(l)}
                                                     />
                                                 ))}
                                             </div>
@@ -1144,9 +1367,10 @@
                                     +
                                 </button>
                             </div>
-                        )}
-                    </main>
-                </div>
+                        )
+                        }
+                    </main >
+                </div >
             );
         }
 

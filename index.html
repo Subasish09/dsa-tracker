@@ -31,21 +31,32 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg: #f3f4f6;
-            --card: #ffffff;
+            --bg: #f8fafc;
+            /* Lighter, cooler gray */
+            --card: rgba(255, 255, 255, 0.8);
             --text: #0f172a;
-            --border: #e2e8f0;
-            --primary: #2563eb;
+            --border: rgba(226, 232, 240, 0.8);
+            --primary: #4f46e5;
+            /* Indigo */
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
             --ink: #0f172a;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-glow: 0 0 15px rgba(79, 70, 229, 0.3);
         }
 
         [data-theme='dark'] {
-            --bg: #030712;
-            --card: #0f172a;
-            --text: #f8fafc;
-            --border: #1e293b;
-            --primary: #3b82f6;
+            --bg: #020617;
+            /* Richer dark */
+            --card: rgba(17, 24, 39, 0.7);
+            --text: #f1f5f9;
+            --border: rgba(30, 41, 59, 0.7);
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
             --ink: #ffffff;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
         }
 
         body {
@@ -57,23 +68,171 @@
             width: 100%;
         }
 
+        ::selection {
+            background-color: rgba(79, 70, 229, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8);
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: var(--glass-border);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            /* Very transparent for internal panels */
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        @keyframes pulse-soft {
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-slide-up {
+            animation: slide-up 0.5s ease-out forwards;
+        }
+
+        /* Background Blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: pulse-soft 8s infinite alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: #4f46e5;
+            opacity: 0.15;
+        }
+
+        .dark .blob-1 {
+            opacity: 0.4;
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: #0ea5e9;
+            /* Sky Blue */
+            opacity: 0.15;
+            animation-delay: 2s;
+        }
+
+        .dark .blob-2 {
+            opacity: 0.4;
+            background: #06b6d4;
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 40%;
+            width: 300px;
+            height: 300px;
+            background: #94a3b8;
+            /* Slate */
+            opacity: 0.2;
+            animation-delay: 4s;
+        }
+
+        .dark .blob-3 {
+            background: #3b82f6;
+            opacity: 0.2;
+        }
+
 
 
         .stat-card {
             background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            /* Fallback */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             min-height: 280px;
             display: flex;
             flex-direction: column;
+            box-shadow: var(--shadow-subtle);
+            position: relative;
+            overflow: hidden;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(79, 70, 229, 0.5);
+            /* Primary highlight */
+            box-shadow: var(--shadow-glow);
+            z-index: 10;
         }
 
         .calendar-grid {
@@ -487,21 +646,26 @@
         };
 
         const NavBar = ({ view, setView, theme, setTheme, lastSync, onNewLog }) => (
-            <nav className="sticky top-0 z-50 px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#020617] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 text-slate-900 dark:text-white">
+            <nav className="sticky top-4 mx-4 md:mx-8 z-50 rounded-2xl glass px-4 py-3 md:px-6 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 text-slate-900 dark:text-white mb-8 shadow-lg">
                 <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white shadow-xl ring-4 ring-blue-100 dark:ring-blue-900/20 text-xl tracking-tighter">C2</div>
+                        <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center font-black text-white shadow-lg shadow-indigo-500/30 text-xl tracking-tighter animate-float">C2</div>
                         <div>
-                            <h1 className="text-xl font-extrabold tracking-tighter">DSA TRACKER</h1>
+                            <h1 className="text-xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">DSA TRACKER</h1>
                             <p className="text-[9px] font-bold opacity-60 dark:opacity-70 uppercase tracking-widest">Last Sync: {lastSync}</p>
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <button onClick={() => setView("dashboard")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'dashboard' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>Home</button>
-                    <button onClick={() => setView("practice")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'practice' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>IDE</button>
-                    <button onClick={() => setView("theory")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'theory' || view === 'theory_edit' ? 'bg-white dark:bg-slate-800 text-pink-500 shadow-sm' : 'opacity-60 hover:opacity-100'}`}>Notes</button>
-                    <button onClick={() => setView("practice_logs")} className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${view === 'practice_logs' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'opacity-60 hover:opacity-100'}`}>History</button>
+                <div className="flex items-center gap-2 bg-slate-100/50 dark:bg-slate-900/50 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
+                    {['dashboard', 'practice', 'theory', 'practice_logs'].map(v => (
+                        <button
+                            key={v}
+                            onClick={() => setView(v)}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === v || (v === 'theory' && view === 'theory_edit') ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm scale-105' : 'opacity-60 hover:opacity-100'}`}
+                        >
+                            {v === 'dashboard' ? 'Home' : v === 'practice' ? 'IDE' : v === 'theory' ? 'Notes' : 'History'}
+                        </button>
+                    ))}
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => {
@@ -511,13 +675,13 @@
                         a.href = url;
                         a.download = `dsa-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
                         a.click();
-                    }} className="flex items-center gap-2 px-3 py-2 opacity-60 hover:opacity-100 transition-all border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs" title="Export Data">
+                    }} className="flex items-center gap-2 px-3 py-2 opacity-60 hover:opacity-100 transition-all border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800" title="Export Data">
                         <span className="text-sm">💾</span> <span className="hidden md:inline">Export</span>
                     </button>
-                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 opacity-80 hover:opacity-100 transition-opacity">{theme === 'light' ? '🌙' : '☀️'}</button>
-                    {view === 'dashboard' && <button onClick={onNewLog} className="bg-slate-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-bold text-xs shadow-lg transform hover:scale-105 transition-transform">+ Log</button>}
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 opacity-80 hover:opacity-100 transition-opacity bg-slate-100 dark:bg-slate-800 rounded-xl">{theme === 'light' ? '🌙' : '☀️'}</button>
+                    {view === 'dashboard' && <button onClick={onNewLog} className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/30 transform hover:scale-105 transition-all outline-none ring-2 ring-offset-2 ring-indigo-500 ring-offset-transparent">+ Log</button>}
                 </div>
-            </nav >
+            </nav>
         );
 
         const StatCard = ({ children, className = "", style = {} }) => (
@@ -542,6 +706,83 @@
                 </div>
             </div>
         );
+
+        const ContributionHeatmap = ({ data }) => {
+            const weeks = useMemo(() => {
+                const today = new Date();
+                const yearAgo = new Date();
+                yearAgo.setDate(today.getDate() - 364);
+
+                const activityMap = new Map();
+                [...data.logs, ...data.practice, ...data.theory].forEach(item => {
+                    // Normalize date to YYYY-MM-DD
+                    const d = item.date.split('/').reverse().join('-'); // Handle DD/MM/YYYY if present
+                    const dateStr = item.date.includes('-') ? item.date : d;
+                    activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + 1);
+                });
+
+                const weeksArr = [];
+                let currentWeek = [];
+
+                // Align start date to Sunday for proper grid
+                const startDate = new Date(yearAgo);
+                while (startDate.getDay() !== 0) startDate.setDate(startDate.getDate() - 1);
+
+                for (let i = 0; i < 371; i++) { // Slightly more than 52 weeks to fill grid
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+
+                    if (date > today && date.getDay() === 0) break; // Stop future weeks
+
+                    const dateStr = date.toISOString().split('T')[0];
+                    const count = activityMap.get(dateStr) || 0;
+
+                    // Color Logic
+                    let color = "bg-slate-100 dark:bg-slate-800";
+                    if (count > 0) color = "bg-teal-200 dark:bg-teal-900";
+                    if (count > 2) color = "bg-teal-400 dark:bg-teal-700";
+                    if (count > 4) color = "bg-teal-500 dark:bg-teal-500";
+                    if (count > 6) color = "bg-teal-600 dark:bg-teal-400";
+
+                    currentWeek.push({ date: dateStr, count, color });
+
+                    if (currentWeek.length === 7) {
+                        weeksArr.push(currentWeek);
+                        currentWeek = [];
+                    }
+                }
+                return weeksArr;
+            }, [data]);
+
+            return (
+                <div className="stat-card !min-h-0 overflow-x-auto bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between items-center mb-4 sticky left-0">
+                        <h3 className="text-xs font-black uppercase tracking-widest opacity-50 dark:text-white">Yearly Activity</h3>
+                        <div className="flex items-center gap-1 text-[10px] opacity-50 font-bold dark:text-white">
+                            <span>Less</span>
+                            <div className="w-2 h-2 rounded bg-slate-100 dark:bg-slate-800"></div>
+                            <div className="w-2 h-2 rounded bg-teal-200 dark:bg-teal-900"></div>
+                            <div className="w-2 h-2 rounded bg-teal-400 dark:bg-teal-700"></div>
+                            <div className="w-2 h-2 rounded bg-teal-600 dark:bg-teal-400"></div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                    <div className="flex gap-1 min-w-max justify-center">
+                        {weeks.map((week, i) => (
+                            <div key={i} className="flex flex-col gap-1">
+                                {week.map((day, j) => (
+                                    <div
+                                        key={day.date}
+                                        className={`w-3 h-3 rounded-sm ${day.color} transition-all hover:scale-150 hover:z-10 cursor-pointer border border-transparent hover:border-white/20`}
+                                        title={`${day.date}: ${day.count} contributions`}
+                                    ></div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
 
         const LogEntry = ({ log, diffColors, expanded, onToggle, onDelete, onEdit, onDownload }) => (
             <div className="stat-card !min-h-0 cursor-pointer p-6 dark:text-white" onClick={onToggle}>
@@ -812,35 +1053,62 @@
             };
 
             const downloadPDF = (item) => {
+                // Create a container that is visible to html2canvas but hidden from user
+                const container = document.createElement('div');
+                container.style.position = 'fixed';
+                container.style.top = '0';
+                container.style.left = '0';
+                container.style.width = '100%';
+                container.style.height = '100%';
+                container.style.zIndex = '-9999';
+                container.style.overflow = 'hidden';
+                container.style.overflowY = 'auto'; // Allow internal scrolling if needed for rendering
+                container.style.opacity = '0'; // Hide from user
+                container.style.pointerEvents = 'none';
+
+                // The actual content element
                 const element = document.createElement('div');
-                element.className = 'markdown-body p-8 bg-white text-black';
-                element.style.position = 'absolute';
-                element.style.left = '-9999px';
-                element.style.top = '0';
-                element.style.width = '800px'; // Fixed width for better PDF rendering
+                element.className = 'markdown-body bg-white text-black';
+                element.style.width = '800px';
+                element.style.padding = '40px';
+                element.style.margin = '0 auto';
+                element.style.minHeight = '1123px'; // A4 height
 
                 element.innerHTML = `
-                    <h1 style="border-bottom: 2px solid #2563eb; padding-bottom: 10px; color: #2563eb;">${item.title || "Untitled"}</h1>
-                    <div style="margin-bottom: 20px; color: #666; font-size: 12px; font-weight: bold; text-transform: uppercase;">
-                        ${item.topic || "General"} • ${item.date || new Date().toLocaleDateString()}
+                    <div style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                        <h1 style="border-bottom: 2px solid #2563eb; padding-bottom: 10px; color: #2563eb; font-size: 24px; font-weight: 800; margin-bottom: 10px;">${item.title || "Untitled"}</h1>
+                        <div style="margin-bottom: 30px; color: #666; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+                            ${item.topic || "General"} • ${item.date || new Date().toLocaleDateString()}
+                        </div>
+                        <div style="font-size: 14px; line-height: 1.6;">
+                            ${marked.parse(item.content || item.logic || "")}
+                        </div>
+                        ${item.code ? `
+                            <div style="margin-top: 30px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #f8fafc; padding: 8px 16px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Code</div>
+                                <pre style="background: #1e293b; color: #f1f5f9; padding: 16px; margin: 0; font-family: monospace; font-size: 12px; white-space: pre-wrap;"><code>${item.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+                            </div>
+                        ` : ''}
                     </div>
-                    ${marked.parse(item.content || item.logic || "")}
-                    ${item.code ? `<pre style="background:#f5f5f5; padding:15px; border-radius:5px; margin-top:20px;"><code>${item.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>` : ''}
                 `;
 
-                document.body.appendChild(element);
+                container.appendChild(element);
+                document.body.appendChild(container);
 
                 const opt = {
-                    margin: 10,
+                    margin: 0,
                     filename: `${(item.title || 'document').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
+                    html2canvas: { scale: 2, useCORS: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
 
-                html2pdf().set(opt).from(element).save().then(() => {
-                    document.body.removeChild(element);
-                });
+                // Small delay to ensure rendering happens
+                setTimeout(() => {
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        document.body.removeChild(container);
+                    });
+                }, 100);
             };
 
             // Enhanced Loading State (Skeleton)
@@ -881,8 +1149,6 @@
             };
 
             const handleViewChange = (newView) => {
-                if (newView === 'practice') setIsTimerRunning(true);
-                else setIsTimerRunning(false);
                 setView(newView);
             };
 
@@ -891,7 +1157,11 @@
 
 
             return (
-                <div className="min-h-screen pb-10 w-full overflow-x-hidden">
+                <div className="min-h-screen pb-10 w-full overflow-x-hidden relative">
+                    <div className="blob blob-1"></div>
+                    <div className="blob blob-2"></div>
+                    <div className="blob blob-3"></div>
+
                     <NavBar
                         view={view}
                         setView={handleViewChange}
@@ -901,16 +1171,17 @@
                         onNewLog={() => {
                             setEntry({ title: "", logic: "", code: "", difficulty: "Medium", topic: "General", date: new Date().toISOString().split('T')[0] });
                             setView("editing");
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                     />
 
-                    <main className="max-w-[1600px] mx-auto p-4 md:p-8">
+                    <main className="max-w-[1600px] mx-auto p-4 md:px-8 relative z-10">
                         {view === "practice" ? (
-                            <div className="space-y-4">
-                                <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-var(--card) p-4 border border-slate-200 dark:border-slate-800 rounded-2xl">
-                                    <div className="flex gap-4 w-full md:w-2/3">
-                                        <input type="text" placeholder="Question Name" className="flex-1 p-3 bg-transparent outline-none font-bold text-lg dark:text-white" value={practiceEntry.title} onChange={e => setPracticeEntry({ ...practiceEntry, title: e.target.value })} />
-                                        <input type="text" placeholder="Topic" className="w-40 p-3 bg-transparent border-l border-slate-200 dark:border-slate-800 outline-none font-bold opacity-60 dark:text-white" value={practiceEntry.topic} onChange={e => setPracticeEntry({ ...practiceEntry, topic: e.target.value })} />
+                            <div className="space-y-4 animate-fade-in">
+                                <div className="flex flex-col md:flex-row gap-4 items-center justify-between glass p-4 rounded-2xl">
+                                    <div className="flex gap-4 w-full md:w-3/4">
+                                        <input type="text" placeholder="Question Name" className="flex-[2] p-3 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-lg dark:text-white placeholder:opacity-50" value={practiceEntry.title} onChange={e => setPracticeEntry({ ...practiceEntry, title: e.target.value })} />
+                                        <input type="text" placeholder="Topic" className="flex-1 p-3 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold opacity-80 dark:text-white placeholder:opacity-50" value={practiceEntry.topic} onChange={e => setPracticeEntry({ ...practiceEntry, topic: e.target.value })} />
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-2xl font-mono font-black text-orange-500 bg-orange-500/10 px-4 py-2 rounded-xl">{formatTime(timer)}</div>
@@ -1087,14 +1358,16 @@
                             </div>
                         ) : view === "practice_logs" ? (
                             <div className="space-y-4 max-w-4xl mx-auto dark:text-white">
-                                <h2 className="text-2xl font-black mb-6">Practice History</h2>
-                                {data.practice.map(p => (
-                                    <div key={p.id} className="stat-card !min-h-0 p-6 mb-4 relative group">
-                                        <button onClick={() => handleDelete(p.id, 'practice')} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑</button>
-                                        <div className="flex justify-between font-bold"><div>{p.title} <span className="text-[10px] opacity-40 ml-2">{p.date}</span></div><div className="text-orange-500">{p.time}</div></div>
-                                        <div className="bg-[#0d1117] p-4 rounded-xl mt-4"><pre className="text-xs text-slate-300"><code>{p.code}</code></pre></div>
-                                    </div>
-                                ))}
+                                <h2 className="text-2xl font-black mb-6 text-center">Practice History</h2>
+                                <div className="max-w-2xl mx-auto space-y-4">
+                                    {data.practice.map(p => (
+                                        <div key={p.id} className="stat-card !min-h-0 p-6 mb-4 relative group">
+                                            <button onClick={() => handleDelete(p.id, 'practice')} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">🗑</button>
+                                            <div className="flex justify-between font-bold"><div>{p.title} <span className="text-[10px] opacity-40 ml-2">{p.date}</span></div><div className="text-orange-500">{p.time}</div></div>
+                                            <div className="bg-[#0d1117] p-4 rounded-xl mt-4"><pre className="text-xs text-slate-300"><code>{p.code}</code></pre></div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ) : view === "editing" ? (
                             <div className="space-y-6 animate-fade-in dark:text-white">
@@ -1218,6 +1491,9 @@
                                         </div>
                                         <div className="absolute right-4 bottom-4 text-xs font-bold text-slate-400">Goal: 150</div>
                                     </StatCard>
+                                </div>
+                                <div className="mt-8">
+                                    <ContributionHeatmap data={data} />
                                 </div>
 
                                 {/* Topic Distribution Chart */}

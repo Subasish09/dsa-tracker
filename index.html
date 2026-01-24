@@ -807,6 +807,7 @@
                         {log.type === 'practice' && <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">IDE</span>}
                     </div>
                     <div className="flex items-center gap-4">
+                        {log.subtopic && <span className="hidden md:inline text-[10px] font-bold opacity-60 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">{log.subtopic}</span>}
                         <span className="text-[10px] opacity-40">{log.date}</span>
                     </div>
                 </div>
@@ -876,7 +877,7 @@
             const [page, setPage] = useState(1);
             const ITEMS_PER_PAGE = 10;
 
-            const [practiceEntry, setPracticeEntry] = useState({ title: "", topic: "", code: "", language: "cpp" });
+            const [practiceEntry, setPracticeEntry] = useState({ title: "", topic: "", subtopic: "", code: "", language: "cpp" });
             const [theoryEntry, setTheoryEntry] = useState({ id: null, title: "", topic: "", date: new Date().toISOString().split('T')[0], content: "" });
             const [output, setOutput] = useState("");
             const [isCompiling, setIsCompiling] = useState(false);
@@ -884,7 +885,10 @@
             const [isTimerRunning, setIsTimerRunning] = useState(false);
             const timerRef = useRef(null);
 
-            const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", date: new Date().toISOString().split('T')[0] });
+            const [entry, setEntry] = useState({ title: "", logic: "", code: "", difficulty: "Medium", topic: "", subtopic: "", date: new Date().toISOString().split('T')[0] });
+
+            // Dashboard Group By State
+            const [groupBy, setGroupBy] = useState("topic"); // 'topic' or 'subtopic'
 
             // Toast State
             const [toast, setToast] = useState({ message: "", visible: false, type: "warning" });
@@ -944,7 +948,26 @@
                 const year = viewDate.getFullYear(), month = viewDate.getMonth();
                 const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
                 const days = [];
-                const activeDates = new Set([...data.history, ...data.logs.map(l => l.date)]);
+
+                // Helper to normalize YYYY-MM-DD to DD/MM/YYYY (en-GB)
+                const toGB = (d) => {
+                    if (!d) return null;
+                    if (d.includes('-')) {
+                        const [y, m, day] = d.split('-');
+                        return `${day}/${m}/${y}`;
+                    }
+                    return d;
+                };
+
+                const allDates = [
+                    ...data.history,
+                    ...data.logs.map(l => l.date),
+                    ...data.practice.map(p => p.date),
+                    ...data.theory.map(t => toGB(t.date))
+                ].filter(Boolean);
+
+                const activeDates = new Set(allDates);
+
                 for (let i = 0; i < firstDay; i++) days.push({ day: null });
                 for (let i = 1; i <= daysInMonth; i++) {
                     const raw = new Date(year, month, i).toLocaleDateString('en-GB');
@@ -979,7 +1002,8 @@
                         log.title.toLowerCase().includes(term) ||
                         log.date.includes(term) ||
                         sanitizeTopic(log.topic).toLowerCase().includes(term) ||
-                        (log.code || "").toLowerCase().includes(term);
+                        (log.code || "").toLowerCase().includes(term) ||
+                        (log.subtopic || "").toLowerCase().includes(term);
                     const matchesDiff = diffFilter[log.difficulty || "Medium"];
                     return matchesSearch && matchesDiff;
                 });
@@ -1015,15 +1039,31 @@
                 // Combine logs and practice for the chart
                 const allItems = [...data.logs, ...data.practice];
                 allItems.forEach(l => {
-                    const t = sanitizeTopic(l.topic);
-                    stats[t] = (stats[t] || 0) + 1;
+                    if (groupBy === 'topic') {
+                        const key = sanitizeTopic(l.topic);
+                        stats[key] = (stats[key] || 0) + 1;
+                    } else {
+                        // For subtopic, split by '+'
+                        if (l.subtopic) {
+                            const parts = l.subtopic.split('+').map(s => s.trim()).filter(Boolean);
+                            if (parts.length > 0) {
+                                parts.forEach(part => {
+                                    stats[part] = (stats[part] || 0) + 1;
+                                });
+                            } else {
+                                stats["Unspecified"] = (stats["Unspecified"] || 0) + 1;
+                            }
+                        } else {
+                            stats["Unspecified"] = (stats["Unspecified"] || 0) + 1;
+                        }
+                    }
                 });
                 const total = allItems.length;
                 if (total === 0) return [];
                 return Object.entries(stats)
                     .sort((a, b) => b[1] - a[1])
                     .map(([name, count]) => ({ name, count, percent: (count / total) * 100 }));
-            }, [data.logs, data.practice]);
+            }, [data.logs, data.practice, groupBy]);
 
             // Note Topics Configuration
             const noteTopics = useMemo(() => {
@@ -1207,7 +1247,7 @@
                         setTheme={setTheme}
                         lastSync={lastSync}
                         onNewLog={() => {
-                            setEntry({ title: "", logic: "", code: "", difficulty: "Medium", topic: "General", date: new Date().toISOString().split('T')[0] });
+                            setEntry({ title: "", logic: "", code: "", difficulty: "Medium", topic: "General", subtopic: "", date: new Date().toISOString().split('T')[0] });
                             setView("editing");
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
@@ -1220,6 +1260,7 @@
                                     <div className="flex gap-4 w-full md:w-3/4">
                                         <input type="text" placeholder="Question Name" className="flex-[2] p-3 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-lg dark:text-white placeholder:opacity-50" value={practiceEntry.title} onChange={e => setPracticeEntry({ ...practiceEntry, title: e.target.value })} />
                                         <input type="text" placeholder="Topic" className="flex-1 p-3 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold opacity-80 dark:text-white placeholder:opacity-50" value={practiceEntry.topic} onChange={e => setPracticeEntry({ ...practiceEntry, topic: e.target.value })} />
+                                        <input type="text" placeholder="Subtopic" className="flex-1 p-3 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold opacity-80 dark:text-white placeholder:opacity-50" value={practiceEntry.subtopic} onChange={e => setPracticeEntry({ ...practiceEntry, subtopic: e.target.value })} />
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-2xl font-mono font-black text-orange-500 bg-orange-500/10 px-4 py-2 rounded-xl">{formatTime(timer)}</div>
@@ -1413,23 +1454,32 @@
                                 <div className="stat-card !min-h-0 p-6 space-y-4">
                                     <h2 className="text-xl font-black mb-4">Create New Log</h2>
                                     <input type="password" placeholder="GitHub Token (Required to Save)" className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none transition-all focus:border-blue-500 text-slate-900 dark:text-white placeholder:text-slate-400" value={token} onChange={e => { setToken(e.target.value); localStorage.setItem('gh_token', e.target.value); }} />
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-4">
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Date</label>
-                                            <input type="date" className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
+                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Question Title</label>
+                                            <input type="text" placeholder="e.g. Two Sum" className="w-full h-[52px] p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-lg text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Topic</label>
-                                            <input type="text" placeholder="e.g. Arrays" className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Date</label>
+                                                <input type="date" className="w-full h-[52px] p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white" value={entry.date} onChange={e => setEntry({ ...entry, date: e.target.value })} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Topic</label>
+                                                <input type="text" placeholder="e.g. Arrays" className="w-full h-[52px] p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.topic} onChange={e => setEntry({ ...entry, topic: e.target.value })} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Subtopic</label>
+                                                <input type="text" placeholder="e.g. Sliding Window + Two Pointer" className="w-full h-[52px] p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.subtopic} onChange={e => setEntry({ ...entry, subtopic: e.target.value })} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Difficulty</label>
+                                                <div className="relative">
+                                                    <select className="w-full h-[52px] p-3 appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
+                                                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Difficulty</label>
-                                            <select className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white" value={entry.difficulty} onChange={e => setEntry({ ...entry, difficulty: e.target.value })}><option>Easy</option><option>Medium</option><option>Hard</option></select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold uppercase opacity-50 ml-1">Question Title</label>
-                                        <input type="text" placeholder="e.g. Two Sum" className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-lg text-slate-900 dark:text-white placeholder:text-slate-400" value={entry.title} onChange={e => setEntry({ ...entry, title: e.target.value })} />
                                     </div>
                                 </div>
 
@@ -1537,7 +1587,15 @@
                                 {/* Topic Distribution Chart */}
                                 {topicStats.length > 0 && (
                                     <div className="stat-card !min-h-0 p-6 space-y-4">
-                                        <h3 className="text-xs font-black uppercase tracking-widest opacity-50 dark:text-white">Topic Distribution</h3>
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-xs font-black uppercase tracking-widest opacity-50 dark:text-white">
+                                                {groupBy === 'topic' ? 'Topic Distribution' : 'Subtopic Distribution'}
+                                            </h3>
+                                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                                <button onClick={() => setGroupBy('topic')} className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${groupBy === 'topic' ? 'bg-white dark:bg-slate-700 shadow text-indigo-500' : 'opacity-50'}`}>Topic</button>
+                                                <button onClick={() => setGroupBy('subtopic')} className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${groupBy === 'subtopic' ? 'bg-white dark:bg-slate-700 shadow text-indigo-500' : 'opacity-50'}`}>Subtopic</button>
+                                            </div>
+                                        </div>
                                         <div className="flex h-4 rounded-full overflow-hidden w-full bg-slate-100 dark:bg-slate-800">
                                             {topicStats.map((t, i) => (
                                                 <div key={t.name} style={{ width: `${t.percent}%`, backgroundColor: `hsl(${220 + (i * 40)}, 70%, 50%)` }} title={`${t.name}: ${t.count}`} />
@@ -1579,7 +1637,9 @@
                                 {/* Topic Explorer Grid (Logs) */}
                                 {topicStats.length > 0 && (
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-extrabold dark:text-white">Explore Topics</h3>
+                                        <h3 className="text-lg font-extrabold dark:text-white">
+                                            {groupBy === 'topic' ? 'Explore Topics' : 'Explore Subtopics'}
+                                        </h3>
                                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                                             {topicStats.map((t) => (
                                                 <button
@@ -1587,7 +1647,9 @@
                                                     onClick={() => { setSearchTerm(t.name); setPage(1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}
                                                     className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all text-left group"
                                                 >
-                                                    <div className="text-[10px] font-bold opacity-40 uppercase mb-1 dark:text-white group-hover:text-blue-500">Topic</div>
+                                                    <div className="text-[10px] font-bold opacity-40 uppercase mb-1 dark:text-white group-hover:text-blue-500">
+                                                        {groupBy === 'topic' ? 'Topic' : 'Subtopic'}
+                                                    </div>
                                                     <div className="font-bold text-sm truncate dark:text-white mb-2">{t.name}</div>
                                                     <div className="inline-block bg-slate-100 dark:bg-slate-800 text-xs font-bold px-2 py-1 rounded-lg dark:text-white group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 transition-colors">
                                                         {t.count} Qs

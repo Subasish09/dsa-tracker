@@ -5,9 +5,11 @@
       "logic": "# Two Pointers – Problem 5 (Longest Substring Without Repeating Characters)\n\n## Problem Statement\n\nGiven a string `s`, find the length of the **longest substring** without repeating characters.\n\nA substring is a **contiguous** sequence of characters.\n\n---\n\n## Examples\n\nInput: \\\ns = \"abcabcbb\"\n\nOutput: 3\n\nExplanation:\\\n\"abc\" is the longest substring without repeating characters\n\n---\n\nInput:\\\ns = \"bbbbb\"\n\nOutput: 1\n\n---\n\nInput:\\\ns = \"pwwkew\"\n\nOutput: 3\n\nExplanation:\\\n\"wke\" is the longest substring without repeating characters\n\n---\n\n## Pattern Recognition\n\nClues in the problem:\n- Substring (contiguous)\n- Need maximum length\n- Repeating characters\n- Sliding window behavior\n\n➡️ **Two Pointers + Sliding Window**\n\nThis is NOT simple two pointers from ends.\n\n---\n\n## Core Idea (VERY IMPORTANT)\n\nMaintain a **window [left, right]** such that:\n- All characters inside the window are **unique**\n\nWe expand the window using `right`  \nWe shrink the window using `left` when a duplicate appears\n\n---\n\n## Pointer Roles\n\n### Left Pointer (`l`)\n- Marks the **start of the current window**\n- Moves forward to remove duplicates\n\n### Right Pointer (`r`)\n- Expands the window by adding new characters\n\n---\n\n## Supporting Data Structure\n\nWe need to **track characters inside the window**.\n\nTypical choices:\n- `set<char>`\n- `unordered_set<char>`\n- Frequency array (for ASCII)\n\nThis does **NOT** violate space constraints.\n\n---\n\n## Window Rules (CRITICAL)\n\nAt any point:\\\nWindow s[l..r] contains NO duplicate characters\n\n---\n\n## Pointer Movement Rules\n\n### Case 1: `s[r]` is NOT in the window\n- Add `s[r]` to the set\n- Update maximum length\n- Move `r++`\n\n### Case 2: `s[r]` IS already in the window\n- Remove `s[l]` from the set\n- Move `l++`\n- Do NOT move `r` yet\n\nWhy?\n- We must shrink until duplicate is removed\n\n---\n\n## Loop Condition\n\nwhile (r < n)\n\n---\n\n## Dry Run Example (Key One)\n\nInput:\\\ns = \"pwwkew\"\n\nSteps:\\\nl=0, r=0 → 'p' → window={p} → max=1\\\nl=0, r=1 → 'w' → window={p,w} → max=2\\\nl=0, r=2 → 'w' → duplicate\\\nremove 'p' → l=1\\\nremove 'w' → l=2\\\nl=2, r=2 → add 'w' → window={w}\\\nl=2, r=3 → 'k' → window={w,k} → max=2\\\nl=2, r=4 → 'e' → window={w,k,e} → max=3\\\nl=2, r=5 → 'w' → duplicate\\\nremove 'w' → l=3\n\n\nResult: 3\n\n---\n\n## Time and Space Complexity\n\n- Time Complexity: `O(n)`\n- Space Complexity: `O(min(n, charset))`\n\n---\n\n## Common Mistakes to Avoid\n\n- Moving both pointers at once\n- Clearing the entire window on duplicate\n- Using nested loops\n- Forgetting substring must be contiguous\n\n---\n\n## Interview One-Line Explanation\n\n> I use a sliding window with two pointers to maintain a substring with unique characters.\n> When a duplicate appears, I shrink the window from the left until the duplicate is removed.\n\n---\n\n## Pattern Recognition Trigger\n\nIf a problem mentions:\n- Longest / smallest substring\n- Contiguous window\n- Condition-based expansion & shrinking\n\nThink immediately:\n**Sliding Window (Two Pointers)**\n\n\n\n\n\n\n\n",
       "code": "/*\nGiven a string s, find the length of the longest substring without repeating characters.\nA substring is a contiguous sequence of characters.\n */\n\n#include <iostream>\n#include <vector>\n#include <unordered_set>\n\nusing namespace std;\n\nint longestSubString(vector<char>& v) {\n    int l = 0, r = 0;\n    int max_substring = 0;\n    unordered_set<char> mySet = {};\n    for (r = 0; r < v.size(); r++) {\n        // Check for violation, means v[r] present in set\n        while (mySet.count(v[r])) {\n            mySet.erase(v[l]);\n            l++;\n        }\n\n        mySet.insert(v[r]);\n        max_substring = max(max_substring, r - l + 1);\n    }\n    return max_substring;\n}\n\nint main() {\n    vector<char> v = {'p', 'w', 'w', 'k', 'e', 'w'};\n    int ans = longestSubString(v);\n\n    cout << \"Longest substring is \" << longestSubString(v) << endl;\n\n    return 0;\n}\n",
       "difficulty": "Medium",
-      "topic": "Array - Two Pointer + Sliding Window",
-      "date": "23/01/2026",
-      "id": 1769191988852
+      "topic": "Array",
+      "date": "Invalid Date",
+      "id": 1769191988852,
+      "type": "log",
+      "subtopic": "Two Pointer + Sliding Window"
     },
     {
       "title": "You are given a sorted array of integers nums.  Remove the duplicates in-place such that each unique element appears only once.  The relative order of the elements must be kept the same.  Return the number of unique elements.  You must do this using O(1) extra space.",
@@ -50,7 +52,8 @@
     "19/01/2026",
     "20/01/2026",
     "21/01/2026",
-    "23/01/2026"
+    "23/01/2026",
+    "Invalid Date"
   ],
   "practice": [],
   "theory": [

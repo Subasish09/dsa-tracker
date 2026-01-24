@@ -6,7 +6,7 @@
       "code": "/*\nGiven a string s, find the length of the longest substring without repeating characters.\nA substring is a contiguous sequence of characters.\n */\n\n#include <iostream>\n#include <vector>\n#include <unordered_set>\n\nusing namespace std;\n\nint longestSubString(vector<char>& v) {\n    int l = 0, r = 0;\n    int max_substring = 0;\n    unordered_set<char> mySet = {};\n    for (r = 0; r < v.size(); r++) {\n        // Check for violation, means v[r] present in set\n        while (mySet.count(v[r])) {\n            mySet.erase(v[l]);\n            l++;\n        }\n\n        mySet.insert(v[r]);\n        max_substring = max(max_substring, r - l + 1);\n    }\n    return max_substring;\n}\n\nint main() {\n    vector<char> v = {'p', 'w', 'w', 'k', 'e', 'w'};\n    int ans = longestSubString(v);\n\n    cout << \"Longest substring is \" << longestSubString(v) << endl;\n\n    return 0;\n}\n",
       "difficulty": "Medium",
       "topic": "Array",
-      "date": "Invalid Date",
+      "date": "23/01/2026",
       "id": 1769191988852,
       "type": "log",
       "subtopic": "Two Pointer + Sliding Window"
@@ -17,7 +17,7 @@
       "code": "/*\nYou are given a sorted array of integers nums.\nRemove the duplicates in-place such that each unique element appears only once.\nThe relative order of the elements must be kept the same.\nReturn the number of unique elements.\nYou must do this using O(1) extra space.\n*/\n\n#include <iostream>\n#include <vector>\n\nusing namespace std;\n\nint findUnique(vector<int> &v) {\n    int i = 0, j = 1;\n    while (j < v.size()) {\n        if (v[i] == v[j]) {\n            j++;\n        } else{\n            i++;\n            v[i] = v[j];\n            j++;\n        }\n        \n    }\n    return i+1;\n}\n\nint main() {\n    vector<int> v = {1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5};\n    int num_of_element = findUnique(v);\n    cout << \"No of unique elements: \" << num_of_element << endl;\n    return 0;\n}",
       "difficulty": "Easy",
       "topic": "Array",
-      "date": "Invalid Date",
+      "date": "21/01/2026",
       "id": 1768999249800,
       "type": "log",
       "subtopic": "Two Pointer"
@@ -28,7 +28,7 @@
       "code": "/*\nYou are given an array height of non-negative integers.\nEach element represents the height of a vertical line drawn at that index.\nChoose two different lines such that together with the x-axis, they form\na container that holds the maximum amount of water.\nReturn the maximum water the container can store.\n*/\n\n#include <iostream>\n#include <vector>\n\nusing namespace std;\n\nint maxWaterTrapped(vector<int> &v) {\n    int i = 0, j = v.size()-1;\n    int max_water = 0;\n    while (i < j) {\n        int width = j-i;\n        max_water = max(max_water, width * min(v[i], v[j]));\n        if (v[i] <= v[j]) {\n            i++;\n        } else {\n            j--;\n        }\n    }\n    return max_water;\n    \n}\n\nint main() {\n    // vector<int> v = {1, 5, 6, 2, 5, 4, 8, 3, 7};\n    vector<int> v = {4, 3, 2, 1, 4};\n    int max_water = maxWaterTrapped(v);\n\n    cout << \"Maximum water trapped is \" << max_water << endl;\n\n    return 0;\n}",
       "difficulty": "Easy",
       "topic": "Array",
-      "date": "Invalid Date",
+      "date": "21/01/2026",
       "id": 1768914124942,
       "type": "log",
       "subtopic": "Two Pointer"
@@ -39,7 +39,7 @@
       "code": "/*\nYou are given a sorted array of integers numbers and an integer target.\n\nFind two distinct elements in the array such that their sum equals target.\n\nReturn the indices (1-based) of these two elements.\n\nConstraints\nThe array is sorted in non-decreasing order\nExactly one valid solution exists\nYou may not use the same element twice\nYou must use constant extra space\n*/\n\n#include <iostream>\n#include <vector>\n\nusing namespace std;\n\nvector<int> twoSum(vector<int>& numbers, int target) {\n    int l = 0, r = numbers.size() - 1;\n\n    while (l < r) {\n        int sum = numbers[l] + numbers[r];\n\n        if (sum > target) {\n            r--;\n        } else if (sum < target) {\n            l++;\n        } else {\n            // return 1-based indices\n            return {l + 1, r + 1};\n        }\n    }\n\n    return {};\n}\n\n\nint main() {\n    vector<int> v = {1, 1, 2, 3, 4, 4, 9};\n    int target = 15;\n    vector<int> res = twoSum(v, target);\n    \n    if (res.size() == 0) {\n        cout << \"not found\" << endl;\n    } else {\n        cout << \"Two Sum: \" << res[0] << \", \" << res[1] << endl;\n    }\n\n    return 0;\n}\n",
       "difficulty": "Easy",
       "topic": "Array",
-      "date": "Invalid Date",
+      "date": "20/01/2026",
       "id": 1768876505216,
       "type": "log",
       "subtopic": "Two Pointer"
@@ -50,7 +50,7 @@
       "code": "/*\nGiven a sorted array of integers and a target value, determine if there exist two numbers\nwhose sum equals the target\n*/\n\n#include <iostream>\n#include <vector>\nusing namespace std;\n\nbool hasPairWithSum(vector<int>& nums, int target) {\n    int l = 0, r = nums.size() - 1;\n\n    while (l < r) {\n        int sum = nums[l] + nums[r];\n\n        if (sum < target) {\n            l++;\n        } else if (sum > target) {\n            r--;\n        } else {\n            return true;\n        }\n    }\n    return false;\n}\n\n\nint main() {\n    vector<int> v = {2, 3, 5, 8, 11};\n    int target = 16;\n\n    bool present = hasPairWithSum(v, target);\n\n    cout << \"The target is \" << present << endl;\n\n    return 0;\n}\n",
       "difficulty": "Easy",
       "topic": "Array",
-      "date": "Invalid Date",
+      "date": "19/01/2026",
       "id": 1768830769172,
       "type": "log",
       "subtopic": "Two Pointer"
@@ -60,8 +60,7 @@
     "19/01/2026",
     "20/01/2026",
     "21/01/2026",
-    "23/01/2026",
-    "Invalid Date"
+    "23/01/2026"
   ],
   "practice": [],
   "theory": [

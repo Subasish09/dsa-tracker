@@ -27,43 +27,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
     <style>
         :root {
             --bg: #fafafa;
-            /* Zinc 50 - Cleaner, premium light */
-            --card: rgba(255, 255, 255, 0.75);
-            /* Frosted glass */
+            --card: rgba(255, 255, 255, 0.65);
             --text: #18181b;
-            /* Zinc 900 - Sharp contrast */
             --border: rgba(228, 228, 231, 0.8);
-            /* Zinc 200 */
             --primary: #4f46e5;
-            /* Refined Indigo */
-            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
-            --ink: #18181b;
             --glass-border: 1px solid rgba(255, 255, 255, 0.5);
-            --shadow-subtle: 0 2px 10px -2px rgba(0, 0, 0, 0.05);
-            --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
         }
 
         [data-theme='dark'] {
             --bg: #09090b;
-            /* Zinc 950 - Deep, rich dark */
-            --card: rgba(24, 24, 27, 0.65);
-            /* Zinc 900 */
+            /* Deep Void */
+            --card: rgba(20, 20, 23, 0.6);
+            /* Darker Glass */
             --text: #e4e4e7;
-            /* Zinc 200 */
             --border: rgba(63, 63, 70, 0.4);
-            /* Zinc 700 */
             --primary: #818cf8;
-            /* Indigo 400 */
-            --primary-gradient: linear-gradient(135deg, #818cf8 0%, #3b82f6 100%);
-            --ink: #ffffff;
             --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-            --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.15);
         }
 
         body {
@@ -75,36 +60,53 @@
             width: 100%;
         }
 
-        ::selection {
-            background-color: rgba(79, 70, 229, 0.2);
+        /* JetBrains Mono for Code */
+        code,
+        pre,
+        .editor-area,
+        .monaco-editor {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-variant-ligatures: active;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        /* Aurora Background */
+        .aurora-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background:
+                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(34, 211, 238, 0.15) 0px, transparent 50%);
+            filter: blur(40px);
+            opacity: 0.6;
+            animation: aurora-shift 20s infinite alternate linear;
         }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+        @keyframes aurora-shift {
+            0% {
+                transform: scale(1);
+            }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.5);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.8);
+            100% {
+                transform: scale(1.1);
+            }
         }
 
         /* Glassmorphism Utilities */
         .glass {
             background: var(--card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
         }
+
+        /* ... existing css ... */
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.05);
@@ -748,7 +750,13 @@
 
                     if (date > today && date.getDay() === 0) break; // Stop future weeks
 
-                    const dateStr = date.toISOString().split('T')[0];
+                    // Fix: Use Local Time YYYY-MM-DD instead of toISOString (UTC)
+                    // This matches the normalized Log dates which are based on local input
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    const dateStr = `${y}-${m}-${d}`;
+
                     const count = activityMap.get(dateStr) || 0;
 
                     // Color Logic
@@ -798,6 +806,40 @@
             );
         };
 
+        // Dynamic Color Generation (Pastel)
+        const stringToColor = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = Math.abs(hash) % 360;
+            return `hsl(${h}, 70%, 85%)`; // Light pastel for BG
+        };
+        const stringToColorDark = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = Math.abs(hash) % 360;
+            return `hsl(${h}, 70%, 25%)`; // Darker pastel for Dark Mode BG
+        };
+        const stringToColorText = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = Math.abs(hash) % 360;
+            return `hsl(${h}, 80%, 30%)`; // Dark text for Light Mode
+        };
+        const stringToColorTextDark = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = Math.abs(hash) % 360;
+            return `hsl(${h}, 80%, 80%)`; // Light text for Dark Mode
+        };
+
         const LogEntry = ({ log, diffColors, expanded, onToggle, onDelete, onEdit, onDownload }) => (
             <div className="stat-card !min-h-0 cursor-pointer p-6 dark:text-white" onClick={onToggle}>
                 <div className="flex justify-between items-center">
@@ -807,8 +849,14 @@
                         {log.type === 'practice' && <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">IDE</span>}
                     </div>
                     <div className="flex items-center gap-4">
-                        {log.subtopic && <span className="hidden md:inline text-[10px] font-bold opacity-60 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">{log.subtopic}</span>}
-                        <span className="text-[10px] opacity-40">{log.date}</span>
+
+                        {log.subtopic && log.subtopic.split('+').map(s => s.trim()).filter(Boolean).map(sub => (
+                            <span key={sub} className="hidden md:inline text-[10px] font-bold px-2 py-0.5 rounded-md border border-black/5 dark:border-white/10" style={{
+                                backgroundColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? stringToColorDark(sub) : stringToColor(sub),
+                                color: window.matchMedia('(prefers-color-scheme: dark)').matches ? stringToColorTextDark(sub) : stringToColorText(sub)
+                            }}>{sub}</span>
+                        ))}
+                        <span className={`text-[10px] ${log.date === 'Invalid Date' ? 'text-red-500 font-black animate-pulse' : 'opacity-40'}`}>{log.date}</span>
                     </div>
                 </div>
                 {expanded && (
@@ -903,7 +951,7 @@
 
             // Helper to parse DD/MM/YYYY
             const parseDate = (str) => {
-                if (!str) return new Date(0);
+                if (!str || str === "Invalid Date") return new Date(0);
                 const parts = str.split('/');
                 if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
                 return new Date(str); // Fallback
@@ -1058,7 +1106,12 @@
                         }
                     }
                 });
-                const total = allItems.length;
+
+                // Fix: Calculate total from the stats themselves (sum of all counts)
+                // This handles cases where one log has multiple subtopics (so count > items)
+                // or no subtopics (so count < items).
+                const total = Object.values(stats).reduce((acc, curr) => acc + curr, 0);
+
                 if (total === 0) return [];
                 return Object.entries(stats)
                     .sort((a, b) => b[1] - a[1])
@@ -1215,7 +1268,7 @@
                 return (
                     <div className="relative flex items-center justify-center">
                         <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
-                            <circle stroke="currentColor" fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset: circumference }} r={normalizedRadius} cx={radius} cy={radius} className="text-slate-200 dark:text-slate-800" />
+                            <circle stroke="currentColor" fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset: circumference }} r={normalizedRadius} cx={radius} cy={radius} className="text-slate-200 dark:text-slate-700" />
                             <circle stroke={color} fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset, transition: 'stroke-dashoffset 1s ease-in-out' }} r={normalizedRadius} cx={radius} cy={radius} strokeLinecap="round" />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -1224,6 +1277,8 @@
                     </div>
                 );
             };
+
+
 
             const handleViewChange = (newView) => {
                 setView(newView);
@@ -1236,9 +1291,7 @@
             return (
                 <div className="min-h-screen pb-10 w-full overflow-x-hidden relative">
                     <Toast message={toast.message} visible={toast.visible} type={toast.type} />
-                    <div className="blob blob-1"></div>
-                    <div className="blob blob-2"></div>
-                    <div className="blob blob-3"></div>
+                    <div className="aurora-bg"></div>
 
                     <NavBar
                         view={view}
@@ -1510,14 +1563,25 @@
 
                                 <button onClick={() => {
                                     // If ID exists, update. Else add new.
-                                    const newLog = { ...entry, id: entry.id || Date.now(), date: entry.date || new Date().toISOString().split('T')[0] };
-                                    const formattedDate = new Date(newLog.date).toLocaleDateString('en-GB');
+                                    // Robust Date Formatting (YYYY-MM-DD -> DD/MM/YYYY)
+                                    let formattedDate = entry.date;
+                                    if (entry.date && entry.date.includes('-')) {
+                                        const [y, m, d] = entry.date.split('-');
+                                        formattedDate = `${d}/${m}/${y}`;
+                                    }
+
+                                    // Create new log object
+                                    const newLog = {
+                                        ...entry,
+                                        id: entry.id || Date.now(),
+                                        date: formattedDate
+                                    };
 
                                     let newLogs;
                                     if (entry.id) {
-                                        newLogs = data.logs.map(l => l.id === entry.id ? { ...newLog, date: formattedDate } : l);
+                                        newLogs = data.logs.map(l => l.id === entry.id ? newLog : l);
                                     } else {
-                                        newLogs = [{ ...newLog, date: formattedDate }, ...data.logs];
+                                        newLogs = [newLog, ...data.logs];
                                     }
 
                                     const newHistory = [...new Set([...data.history, formattedDate])];
@@ -1651,7 +1715,12 @@
                                                         {groupBy === 'topic' ? 'Topic' : 'Subtopic'}
                                                     </div>
                                                     <div className="font-bold text-sm truncate dark:text-white mb-2">{t.name}</div>
-                                                    <div className="inline-block bg-slate-100 dark:bg-slate-800 text-xs font-bold px-2 py-1 rounded-lg dark:text-white group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 group-hover:text-blue-600 transition-colors">
+                                                    <div className="inline-block text-xs font-bold px-2 py-1 rounded-lg transition-colors border border-black/5 dark:border-white/5"
+                                                        style={{
+                                                            backgroundColor: groupBy === 'subtopic' ? (theme === 'dark' ? stringToColorDark(t.name) : stringToColor(t.name)) : (theme === 'dark' ? 'rgba(30, 41, 59, 1)' : 'rgba(241, 245, 249, 1)'),
+                                                            color: groupBy === 'subtopic' ? (theme === 'dark' ? stringToColorTextDark(t.name) : stringToColorText(t.name)) : 'inherit'
+                                                        }}
+                                                    >
                                                         {t.count} Qs
                                                     </div>
                                                 </button>
@@ -1706,7 +1775,21 @@
                                                         expanded={expandedQuestion === log.id}
                                                         onToggle={() => setExpandedQuestion(expandedQuestion === log.id ? null : log.id)}
                                                         onDelete={(id) => handleDelete(id, log.type)}
-                                                        onEdit={(l) => { setEntry(l); setView('editing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                                        onEdit={(l) => {
+                                                            let validDate = l.date;
+                                                            // Auto-repair Invalid Date -> Today
+                                                            if (!l.date || l.date === "Invalid Date") {
+                                                                validDate = new Date().toISOString().split('T')[0];
+                                                            }
+                                                            // Convert DD/MM/YYYY -> YYYY-MM-DD for input[type="date"]
+                                                            else if (l.date.includes('/')) {
+                                                                const [d, m, y] = l.date.split('/');
+                                                                validDate = `${y}-${m}-${d}`;
+                                                            }
+                                                            setEntry({ ...l, date: validDate });
+                                                            setView('editing');
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
                                                         onDownload={(l) => downloadPDF(l)}
                                                     />
                                                 ))}
@@ -1743,12 +1826,11 @@
                                     +
                                 </button>
                             </div>
-                        )
-                        }
-                    </main >
-                </div >
+                        )}
+                    </main>
+                </div>
             );
-        }
+        };
 
         ReactDOM.createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
     </script>

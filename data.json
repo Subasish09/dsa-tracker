@@ -62,7 +62,18 @@
     "21/01/2026",
     "23/01/2026"
   ],
-  "practice": [],
+  "practice": [
+    {
+      "title": "Given a 1-indexed array 'numbers' sorted in non-decreasing order and an integer target, find two numbers such that they add up to target and return their indices as [index1, index2] (1-based). You may assume exactly one solution exists and you may not use the same element twice. You must use only constant extra space.",
+      "topic": "Array",
+      "subtopic": "Two Pointer",
+      "code": "#include <iostream>\n#include <vector>\n\nusing namespace std;\n\nvector<int> twoSum(vector<int>& numbers, int target) {\n    int l = 0, r = numbers.size() - 1;\n    vector<int> res = {};\n    while (l < r) {\n        int sum = numbers[l] + numbers[r];\n        if (sum > target) {\n            r--;\n        } else if (sum < target) {\n            l++;\n        } else {\n            res.push_back(l+1);\n            res.push_back(r+1);\n            break;\n        }\n    }\n\n    return res;\n}\n\nint main() {\n    vector<int> v = {2, 7, 11, 15};\n    vector<int> res = twoSum(v, 9);\n\n    cout << \"First number: \" << res[0] << endl;\n    cout << \"First number: \" << res[1] << endl;\n\n    return 0;\n}",
+      "language": "cpp",
+      "time": "11:14",
+      "id": 1769448802617,
+      "date": "26/01/2026"
+    }
+  ],
   "theory": [
     {
       "id": 1769143787001,

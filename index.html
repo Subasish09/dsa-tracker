@@ -842,21 +842,20 @@
 
         const LogEntry = ({ log, diffColors, expanded, onToggle, onDelete, onEdit, onDownload }) => (
             <div className="stat-card !min-h-0 cursor-pointer p-6 dark:text-white" onClick={onToggle}>
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
+                    <div className="flex items-center gap-3 w-full md:w-auto mb-2 md:mb-0">
                         <div className="diff-dot" style={{ backgroundColor: diffColors[log.difficulty || 'Medium'], width: 12, height: 12, borderRadius: '50%', boxShadow: `0 0 8px ${diffColors[log.difficulty || 'Medium']}`, flexShrink: 0 }}></div>
-                        <span className="font-bold">{log.title}</span>
-                        {log.type === 'practice' && <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">IDE</span>}
+                        <span className="font-bold text-lg md:text-base leading-tight">{log.title}</span>
                     </div>
-                    <div className="flex items-center gap-4">
-
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto">
+                        {log.type === 'practice' && <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">IDE</span>}
                         {log.subtopic && log.subtopic.split('+').map(s => s.trim()).filter(Boolean).map(sub => (
-                            <span key={sub} className="hidden md:inline text-[10px] font-bold px-2 py-0.5 rounded-md border border-black/5 dark:border-white/10" style={{
+                            <span key={sub} className="text-[10px] font-bold px-2 py-0.5 rounded-md border border-black/5 dark:border-white/10" style={{
                                 backgroundColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? stringToColorDark(sub) : stringToColor(sub),
                                 color: window.matchMedia('(prefers-color-scheme: dark)').matches ? stringToColorTextDark(sub) : stringToColorText(sub)
                             }}>{sub}</span>
                         ))}
-                        <span className={`text-[10px] ${log.date === 'Invalid Date' ? 'text-red-500 font-black animate-pulse' : 'opacity-40'}`}>{log.date}</span>
+                        <span className={`text-[10px] ${log.date === 'Invalid Date' ? 'text-red-500 font-black animate-pulse' : 'opacity-40'} ml-auto md:ml-0`}>{log.date}</span>
                     </div>
                 </div>
                 {expanded && (
@@ -1312,7 +1311,7 @@
                         {view === "practice" ? (
                             <div className="space-y-4 animate-fade-in">
                                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between glass p-4 rounded-2xl">
-                                    <div className="flex gap-4 w-full md:w-3/4">
+                                    <div className="flex flex-col md:flex-row gap-4 w-full md:w-3/4">
                                         <div className="flex-[2] relative">
                                             <input type="text" placeholder="Question Name" className="w-full p-3 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-lg dark:text-white placeholder:opacity-50" value={practiceEntry.title} onChange={e => setPracticeEntry({ ...practiceEntry, title: e.target.value })} />
                                         </div>
@@ -1563,9 +1562,9 @@
                                             onClick={e => e.stopPropagation()}
                                         >
                                             {/* Modal Header */}
-                                            <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-slate-50/50 dark:bg-[#161b22]">
-                                                <div>
-                                                    <h2 className="text-0.5xl md:text-1xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">
+                                            <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start gap-6 md:gap-0 bg-slate-50/50 dark:bg-[#161b22]">
+                                                <div className="w-full md:w-auto">
+                                                    <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight leading-snug">
                                                         {data.practice.find(p => p.id === expandedPracticeId)?.title || "Untitled Practice"}
                                                     </h2>
                                                     <div className="flex flex-wrap gap-3 items-center text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -1584,7 +1583,7 @@
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-2 w-full md:w-auto justify-end md:justify-start">
                                                     <button
                                                         onClick={() => {
                                                             const p = data.practice.find(p => p.id === expandedPracticeId);
